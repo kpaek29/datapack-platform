@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataPack Platform</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h1 { font-size: 20px; }
+        .navbar .user-info { display: flex; align-items: center; gap: 15px; }
+        .navbar button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 30px; }
+        
+        /* Auth Forms */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 60px);
+        }
+        .auth-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .auth-box h2 { margin-bottom: 25px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn:hover { background: #1e3c72; }
+        .btn-secondary { background: #6c757d; }
+        .auth-switch { text-align: center; margin-top: 20px; }
+        .auth-switch a { color: #2a5298; cursor: pointer; }
+        
+        /* Dashboard */
+        .dashboard { display: none; }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .card h3 { margin-bottom: 20px; color: #333; }
+        
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover { border-color: #2a5298; }
+        .upload-area.dragover { border-color: #2a5298; background: #f0f5ff; }
+        .upload-area input { display: none; }
+        .upload-area p { color: #666; margin-top: 10px; }
+        
+        /* File List */
+        .file-list { margin-top: 15px; }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .file-item .remove { color: #dc3545; cursor: pointer; }
+        
+        /* Progress */
+        .progress-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        .progress-bar .progress {
+            height: 100%;
+            background: #2a5298;
+            transition: width 0.3s;
+        }
+        
+        /* Results */
+        .results { display: none; }
+        .download-btn {
+            display: inline-block;
+            padding: 15px 25px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 10px 10px 0;
+        }
+        .download-btn:hover { background: #218838; }
+        
+        /* Sessions */
+        .session-list { margin-top: 15px; }
+        .session-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .session-item .actions button {
+            padding: 5px 10px;
+            margin-left: 5px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .session-item .actions .delete { background: #dc3545; color: white; }
+        
+        /* Messages */
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .message.error { background: #f8d7da; color: #721c24; }
+        .message.success { background: #d4edda; color: #155724; }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>📊 DataPack Platform</h1>
+        <div class="user-info" id="userInfo" style="display: none;">
+            <span id="userName"></span>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Auth Section -->
+    <div class="auth-container" id="authSection">
+        <div class="auth-box" id="loginBox">
+            <h2>Login</h2>
+            <div id="loginError" class="message error hidden"></div>
+            <form onsubmit="login(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <p class="auth-switch">Need an account? <a onclick="showRegister()">Register</a></p>
+        </div>
+
+        <div class="auth-box hidden" id="registerBox">
+            <h2>Register</h2>
+            <div id="registerError" class="message error hidden"></div>
+            <form onsubmit="register(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail">
+                </div>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regFullName">
+                </div>
+                <div class="form-group">
+                    <label>Invite Code</label>
+                    <input type="text" id="regInviteCode" required>
+                </div>
+                <button type="submit" class="btn">Register</button>
+            </form>
+            <p class="auth-switch">Have an account? <a onclick="showLogin()">Login</a></p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="container dashboard" id="dashboard">
+        <div id="messageArea"></div>
+        
+        <!-- Upload Card -->
+        <div class="card">
+            <h3>📁 Upload Data Files</h3>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv">
+                <div style="font-size: 48px;">📤</div>
+                <p>Click or drag files here to upload</p>
+                <p style="font-size: 12px; color: #999;">Supports .xlsx, .xls, .csv</p>
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <button class="btn" id="uploadBtn" onclick="uploadFiles()" style="display: none;">Upload Files</button>
+        </div>
+
+        <!-- Processing Card -->
+        <div class="card hidden" id="processCard">
+            <h3>⚙️ Process & Generate</h3>
+            <div class="form-group">
+                <label>Data Pack Name</label>
+                <input type="text" id="packName" value="Data Pack" style="width: 300px;">
+            </div>
+            <button class="btn" onclick="processAndGenerate()">Generate Data Pack</button>
+            <div class="progress-bar hidden" id="progressBar">
+                <div class="progress" id="progress" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Results Card -->
+        <div class="card results" id="resultsCard">
+            <h3>✅ Generated Outputs</h3>
+            <div id="downloadLinks"></div>
+        </div>
+
+        <!-- Sessions Card -->
+        <div class="card">
+            <h3>📋 Recent Sessions</h3>
+            <div class="session-list" id="sessionList"></div>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token');
+        let currentSessionId = null;
+        let selectedFiles = [];
+
+        // Check auth on load
+        if (token) {
+            checkAuth();
+        }
+
+        async function checkAuth() {
+            try {
+                const res = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const user = await res.json();
+                    showDashboard(user);
+                } else {
+                    logout();
+                }
+            } catch (e) {
+                logout();
+            }
+        }
+
+        async function login(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    token = data.access_token;
+                    localStorage.setItem('token', token);
+                    checkAuth();
+                } else {
+                    showError('loginError', 'Invalid username or password');
+                }
+            } catch (e) {
+                showError('loginError', 'Connection error');
+            }
+        }
+
+        async function register(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('username', document.getElementById('regUsername').value);
+            formData.append('password', document.getElementById('regPassword').value);
+            formData.append('email', document.getElementById('regEmail').value);
+            formData.append('full_name', document.getElementById('regFullName').value);
+            formData.append('invite_code', document.getElementById('regInviteCode').value);
+            
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    token = data.access_token;
+                    localStorage.setItem('token', token);
+                    checkAuth();
+                } else {
+                    const err = await res.json();
+                    showError('registerError', err.detail || 'Registration failed');
+                }
+            } catch (e) {
+                showError('registerError', 'Connection error');
+            }
+        }
+
+        function logout() {
+            token = null;
+            localStorage.removeItem('token');
+            document.getElementById('authSection').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+        }
+
+        function showDashboard(user) {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'flex';
+            document.getElementById('userName').textContent = user.full_name || user.username;
+            loadSessions();
+        }
+
+        function showLogin() {
+            document.getElementById('loginBox').classList.remove('hidden');
+            document.getElementById('registerBox').classList.add('hidden');
+        }
+
+        function showRegister() {
+            document.getElementById('loginBox').classList.add('hidden');
+            document.getElementById('registerBox').classList.remove('hidden');
+        }
+
+        function showError(elementId, message) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.classList.remove('hidden');
+        }
+
+        // File handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', () => {
+            handleFiles(fileInput.files);
+        });
+
+        function handleFiles(files) {
+            selectedFiles = [...selectedFiles, ...Array.from(files)];
+            renderFileList();
+        }
+
+        function renderFileList() {
+            const list = document.getElementById('fileList');
+            list.innerHTML = selectedFiles.map((f, i) => `
+                <div class="file-item">
+                    <span>📄 ${f.name}</span>
+                    <span class="remove" onclick="removeFile(${i})">✕</span>
+                </div>
+            `).join('');
+            
+            document.getElementById('uploadBtn').style.display = selectedFiles.length ? 'block' : 'none';
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+        }
+
+        async function uploadFiles() {
+            if (!selectedFiles.length) return;
+            
+            const formData = new FormData();
+            selectedFiles.forEach(f => formData.append('files', f));
+            
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    currentSessionId = data.session_id;
+                    selectedFiles = [];
+                    renderFileList();
+                    document.getElementById('processCard').classList.remove('hidden');
+                    showMessage('Files uploaded successfully!', 'success');
+                    loadSessions();
+                } else {
+                    showMessage('Upload failed', 'error');
+                }
+            } catch (e) {
+                showMessage('Connection error', 'error');
+            }
+        }
+
+        async function processAndGenerate() {
+            if (!currentSessionId) return;
+            
+            const progressBar = document.getElementById('progressBar');
+            const progress = document.getElementById('progress');
+            progressBar.classList.remove('hidden');
+            
+            try {
+                // Process
+                progress.style.width = '30%';
+                const processRes = await fetch(`/api/process/${currentSessionId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!processRes.ok) throw new Error('Processing failed');
+                
+                // Generate
+                progress.style.width = '60%';
+                const packName = document.getElementById('packName').value;
+                const formData = new FormData();
+                formData.append('pack_name', packName);
+                
+                const genRes = await fetch(`/api/generate/${currentSessionId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                
+                if (!genRes.ok) throw new Error('Generation failed');
+                
+                const data = await genRes.json();
+                progress.style.width = '100%';
+                
+                // Show downloads
+                const downloads = document.getElementById('downloadLinks');
+                downloads.innerHTML = `
+                    <a href="/api/download/${currentSessionId}/${data.outputs.ppt}" 
+                       class="download-btn" 
+                       onclick="downloadFile(event, '${currentSessionId}', '${data.outputs.ppt}')">
+                        📊 Download PPT
+                    </a>
+                    <a href="/api/download/${currentSessionId}/${data.outputs.excel}" 
+                       class="download-btn"
+                       onclick="downloadFile(event, '${currentSessionId}', '${data.outputs.excel}')">
+                        📗 Download Excel
+                    </a>
+                `;
+                document.getElementById('resultsCard').style.display = 'block';
+                showMessage('Data pack generated successfully!', 'success');
+                
+            } catch (e) {
+                showMessage(e.message, 'error');
+            } finally {
+                setTimeout(() => progressBar.classList.add('hidden'), 1000);
+            }
+        }
+
+        async function downloadFile(e, sessionId, filename) {
+            e.preventDefault();
+            const res = await fetch(`/api/download/${sessionId}/${filename}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+            }
+        }
+
+        async function loadSessions() {
+            try {
+                const res = await fetch('/api/sessions', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    renderSessions(data.sessions);
+                }
+            } catch (e) {}
+        }
+
+        function renderSessions(sessions) {
+            const list = document.getElementById('sessionList');
+            if (!sessions.length) {
+                list.innerHTML = '<p style="color: #666;">No sessions yet</p>';
+                return;
+            }
+            
+            list.innerHTML = sessions.slice(0, 10).map(s => `
+                <div class="session-item">
+                    <div>
+                        <strong>${s.files.join(', ')}</strong><br>
+                        <small>${new Date(s.timestamp).toLocaleString()}</small>
+                    </div>
+                    <div class="actions">
+                        <button onclick="loadSession('${s.session_id}')">Load</button>
+                        <button class="delete" onclick="deleteSession('${s.session_id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadSession(sessionId) {
+            currentSessionId = sessionId;
+            document.getElementById('processCard').classList.remove('hidden');
+            showMessage('Session loaded', 'success');
+        }
+
+        async function deleteSession(sessionId) {
+            if (!confirm('Delete this session?')) return;
+            
+            await fetch(`/api/sessions/${sessionId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            loadSessions();
+        }
+
+        function showMessage(text, type) {
+            const area = document.getElementById('messageArea');
+            area.innerHTML = `<div class="message ${type}">${text}</div>`;
+            setTimeout(() => area.innerHTML = '', 5000);
+        }
+    </script>
+</body>
+</html>
