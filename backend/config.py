@@ -4,11 +4,16 @@ from pathlib import Path
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Use persistent disk on Render, local dirs otherwise
-if os.getenv("RENDER"):
-    DATA_DIR = Path("/data")
-else:
-    DATA_DIR = BASE_DIR
+# Use persistent disk if /data exists and is writable, otherwise local dirs
+DATA_DIR = BASE_DIR
+if Path("/data").exists():
+    try:
+        test_file = Path("/data/.write_test")
+        test_file.touch()
+        test_file.unlink()
+        DATA_DIR = Path("/data")
+    except (PermissionError, OSError):
+        pass  # Fall back to BASE_DIR
 
 UPLOAD_DIR = DATA_DIR / "uploads"
 OUTPUT_DIR = DATA_DIR / "outputs"
