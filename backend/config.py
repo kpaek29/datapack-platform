@@ -3,13 +3,21 @@ from pathlib import Path
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
-UPLOAD_DIR = BASE_DIR / "uploads"
-OUTPUT_DIR = BASE_DIR / "outputs"
-TEMPLATE_DIR = BASE_DIR / "templates"
+
+# Use persistent disk on Render, local dirs otherwise
+if os.getenv("RENDER"):
+    DATA_DIR = Path("/data")
+else:
+    DATA_DIR = BASE_DIR
+
+UPLOAD_DIR = DATA_DIR / "uploads"
+OUTPUT_DIR = DATA_DIR / "outputs"
+TEMPLATE_DIR = BASE_DIR / "templates"  # Templates stay with code
+USERS_FILE_PATH = DATA_DIR / "users.json"
 
 # Create directories if they don't exist
-UPLOAD_DIR.mkdir(exist_ok=True)
-OUTPUT_DIR.mkdir(exist_ok=True)
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 TEMPLATE_DIR.mkdir(exist_ok=True)
 
 # Security

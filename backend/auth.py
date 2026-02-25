@@ -9,11 +9,11 @@ from pydantic import BaseModel
 import json
 from pathlib import Path
 
-from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, BASE_DIR
+from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, USERS_FILE_PATH
 security = HTTPBearer()
 
-# Simple file-based user store (replace with DB in production)
-USERS_FILE = BASE_DIR / "users.json"
+# Simple file-based user store
+USERS_FILE = USERS_FILE_PATH
 
 class User(BaseModel):
     username: str

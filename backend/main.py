@@ -57,25 +57,8 @@ async def login(username: str = Form(...), password: str = Form(...)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.post("/api/auth/register", response_model=Token)
-async def register(
-    username: str = Form(...), 
-    password: str = Form(...),
-    email: str = Form(None),
-    full_name: str = Form(None),
-    invite_code: str = Form(...)
-):
-    """Register a new user (requires invite code)"""
-    # Simple invite code system - change this in production
-    if invite_code != "DATAPACK2024":
-        raise HTTPException(status_code=400, detail="Invalid invite code")
-    
-    try:
-        user = create_user(username, password, email, full_name)
-        access_token = create_access_token(data={"sub": user.username})
-        return {"access_token": access_token, "token_type": "bearer"}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+# Registration disabled - use CLI to create users:
+# python -m backend.cli add-user <username> <password> [--email EMAIL] [--name NAME]
 
 
 @app.get("/api/auth/me", response_model=User)
