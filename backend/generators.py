@@ -4,7 +4,7 @@ Creates PPT and Excel outputs from processed data
 """
 from pptx import Presentation
 from pptx.util import Inches, Pt
-from pptx.dml.color import RgbColor
+from pptx.dml.color import RGBColor
 from pptx.enum.chart import XL_CHART_TYPE
 from pptx.chart.data import CategoryChartData
 import pandas as pd
@@ -44,7 +44,7 @@ class PPTGenerator:
             sub_para = sub_frame.paragraphs[0]
             sub_para.text = subtitle
             sub_para.font.size = Pt(20)
-            sub_para.font.color.rgb = RgbColor(100, 100, 100)
+            sub_para.font.color.rgb = RGBColor(100, 100, 100)
     
     def add_section_slide(self, title: str):
         """Add a section divider slide"""
@@ -147,7 +147,7 @@ class PPTGenerator:
             # Box
             shape = slide.shapes.add_shape(1, Inches(x), Inches(2), Inches(box_width), Inches(2))
             shape.fill.solid()
-            shape.fill.fore_color.rgb = RgbColor(240, 240, 240)
+            shape.fill.fore_color.rgb = RGBColor(240, 240, 240)
             
             # KPI Value
             val_box = slide.shapes.add_textbox(Inches(x), Inches(2.3), Inches(box_width), Inches(1))

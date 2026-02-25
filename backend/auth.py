@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from passlib.context import CryptContext
+import hashlib
+import secrets
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -9,8 +10,6 @@ import json
 from pathlib import Path
 
 from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, BASE_DIR
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 # Simple file-based user store (replace with DB in production)
@@ -40,10 +39,17 @@ def save_users_db(users: dict):
         json.dump(users, f, indent=2)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    # Simple sha256 with salt (format: salt$hash)
+    if '$' not in hashed_password:
+        return False
+    salt, stored_hash = hashed_password.split('$', 1)
+    computed_hash = hashlib.sha256((salt + plain_password).encode()).hexdigest()
+    return secrets.compare_digest(computed_hash, stored_hash)
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    salt = secrets.token_hex(16)
+    hash_value = hashlib.sha256((salt + password).encode()).hexdigest()
+    return f"{salt}${hash_value}"
 
 def get_user(username: str) -> Optional[UserInDB]:
     users = get_users_db()
