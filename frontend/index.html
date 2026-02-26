@@ -3,198 +3,449 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataPack Platform</title>
+    <title>DataPack Platform | Silver Oak</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f7fa;
-            min-height: 100vh;
+        :root {
+            --so-dark-teal: #033333;
+            --so-green: #3E7733;
+            --so-green-light: #4a8f3d;
+            --so-gray: #6B6B6B;
+            --so-gray-light: #85868A;
+            --so-cream: #f9f8f6;
+            --so-white: #ffffff;
+            --so-border: #e5e5e5;
         }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            background: var(--so-cream);
+            min-height: 100vh;
+            color: var(--so-dark-teal);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        h1, h2, h3, h4, h5 {
+            font-family: 'Cormorant', Georgia, serif;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+        
+        /* Navbar */
         .navbar {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 15px 30px;
+            background: var(--so-dark-teal);
+            color: var(--so-white);
+            padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 10px rgba(3, 51, 51, 0.15);
         }
-        .navbar h1 { font-size: 20px; }
-        .navbar .user-info { display: flex; align-items: center; gap: 15px; }
+        .navbar h1 {
+            font-size: 24px;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+        .navbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .navbar .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--so-green);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: 'Libre Baskerville', serif;
+            font-size: 13px;
+        }
         .navbar button {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: var(--so-white);
+            padding: 8px 20px;
+            border-radius: 4px;
             cursor: pointer;
+            font-family: 'Libre Baskerville', serif;
+            font-size: 12px;
+            transition: all 0.2s;
         }
-        .container { max-width: 1200px; margin: 0 auto; padding: 30px; }
+        .navbar button:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 30px;
+        }
         
         /* Auth Forms */
         .auth-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: calc(100vh - 60px);
+            min-height: calc(100vh - 80px);
+            background: linear-gradient(135deg, var(--so-cream) 0%, #f0efed 100%);
         }
         .auth-box {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            background: var(--so-white);
+            padding: 50px;
+            border-radius: 8px;
+            box-shadow: 0 4px 30px rgba(3, 51, 51, 0.08);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            border: 1px solid var(--so-border);
         }
-        .auth-box h2 { margin-bottom: 25px; text-align: center; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .form-group input {
+        .auth-box h2 {
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+            color: var(--so-dark-teal);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--so-gray);
+        }
+        .form-group input, .form-group select {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 14px 16px;
+            border: 1px solid var(--so-border);
+            border-radius: 4px;
             font-size: 14px;
+            font-family: 'Libre Baskerville', serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--so-green);
+            box-shadow: 0 0 0 3px rgba(62, 119, 51, 0.1);
+        }
+        
         .btn {
             width: 100%;
-            padding: 12px;
-            background: #2a5298;
-            color: white;
+            padding: 14px 20px;
+            background: var(--so-dark-teal);
+            color: var(--so-white);
             border: none;
-            border-radius: 5px;
-            font-size: 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: 'Libre Baskerville', serif;
             cursor: pointer;
             margin-top: 10px;
+            transition: background 0.2s;
+            letter-spacing: 0.02em;
         }
-        .btn:hover { background: #1e3c72; }
-        .btn-secondary { background: #6c757d; }
-        .auth-switch { text-align: center; margin-top: 20px; }
-        .auth-switch a { color: #2a5298; cursor: pointer; }
+        .btn:hover {
+            background: #044444;
+        }
+        .btn-green {
+            background: var(--so-green);
+        }
+        .btn-green:hover {
+            background: var(--so-green-light);
+        }
+        .btn-secondary {
+            background: var(--so-gray);
+        }
+        
+        .auth-switch {
+            text-align: center;
+            margin-top: 25px;
+            color: var(--so-gray-light);
+            font-size: 13px;
+            font-style: italic;
+        }
         
         /* Dashboard */
         .dashboard { display: none; }
+        
         .card {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            background: var(--so-white);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 15px rgba(3, 51, 51, 0.05);
+            border: 1px solid var(--so-border);
         }
-        .card h3 { margin-bottom: 20px; color: #333; }
+        .card h3 {
+            margin-bottom: 20px;
+            color: var(--so-dark-teal);
+            font-size: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--so-green);
+            display: inline-block;
+        }
+        .card-subtitle {
+            color: var(--so-gray);
+            margin-bottom: 20px;
+            font-style: italic;
+        }
         
         /* Upload Area */
         .upload-area {
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 40px;
+            border: 2px dashed var(--so-border);
+            border-radius: 8px;
+            padding: 50px 40px;
             text-align: center;
             cursor: pointer;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            background: var(--so-cream);
         }
-        .upload-area:hover { border-color: #2a5298; }
-        .upload-area.dragover { border-color: #2a5298; background: #f0f5ff; }
+        .upload-area:hover {
+            border-color: var(--so-green);
+            background: rgba(62, 119, 51, 0.03);
+        }
+        .upload-area.dragover {
+            border-color: var(--so-green);
+            background: rgba(62, 119, 51, 0.08);
+        }
         .upload-area input { display: none; }
-        .upload-area p { color: #666; margin-top: 10px; }
+        .upload-area .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .upload-area p {
+            color: var(--so-gray);
+            margin-top: 10px;
+        }
+        .upload-area .hint {
+            font-size: 12px;
+            color: var(--so-gray-light);
+            font-style: italic;
+        }
         
         /* File List */
-        .file-list { margin-top: 15px; }
+        .file-list { margin-top: 20px; }
         .file-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            margin-bottom: 5px;
+            padding: 12px 16px;
+            background: var(--so-cream);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            border: 1px solid var(--so-border);
         }
-        .file-item .remove { color: #dc3545; cursor: pointer; }
+        .file-item .remove {
+            color: #c0392b;
+            cursor: pointer;
+            font-size: 18px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .file-item .remove:hover { opacity: 1; }
         
         /* Progress */
         .progress-bar {
-            height: 10px;
-            background: #e9ecef;
-            border-radius: 5px;
+            height: 8px;
+            background: var(--so-border);
+            border-radius: 4px;
             overflow: hidden;
-            margin: 15px 0;
+            margin: 20px 0;
         }
         .progress-bar .progress {
             height: 100%;
-            background: #2a5298;
+            background: linear-gradient(90deg, var(--so-dark-teal), var(--so-green));
             transition: width 0.3s;
         }
         
         /* Results */
         .results { display: none; }
         .download-btn {
-            display: inline-block;
-            padding: 15px 25px;
-            background: #28a745;
-            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 28px;
+            background: var(--so-green);
+            color: var(--so-white);
             text-decoration: none;
-            border-radius: 5px;
-            margin: 10px 10px 10px 0;
+            border-radius: 4px;
+            margin: 10px 15px 10px 0;
+            font-family: 'Libre Baskerville', serif;
+            font-size: 14px;
+            transition: background 0.2s;
         }
-        .download-btn:hover { background: #218838; }
+        .download-btn:hover {
+            background: var(--so-green-light);
+        }
+        .download-btn .icon { font-size: 20px; }
         
         /* Sessions */
-        .session-list { margin-top: 15px; }
+        .session-list { margin-top: 20px; }
         .session-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            margin-bottom: 10px;
+            padding: 16px 20px;
+            background: var(--so-cream);
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border: 1px solid var(--so-border);
+        }
+        .session-item strong {
+            color: var(--so-dark-teal);
+            font-family: 'Cormorant', serif;
+            font-size: 16px;
+        }
+        .session-item small {
+            color: var(--so-gray-light);
+            font-style: italic;
+        }
+        .session-item .actions {
+            display: flex;
+            gap: 8px;
         }
         .session-item .actions button {
-            padding: 5px 10px;
-            margin-left: 5px;
-            border: none;
-            border-radius: 3px;
+            padding: 8px 16px;
+            border: 1px solid var(--so-border);
+            background: var(--so-white);
+            border-radius: 4px;
             cursor: pointer;
+            font-family: 'Libre Baskerville', serif;
+            font-size: 12px;
+            transition: all 0.2s;
         }
-        .session-item .actions .delete { background: #dc3545; color: white; }
+        .session-item .actions button:hover {
+            border-color: var(--so-green);
+            color: var(--so-green);
+        }
+        .session-item .actions .delete {
+            background: transparent;
+            border-color: #c0392b;
+            color: #c0392b;
+        }
+        .session-item .actions .delete:hover {
+            background: #c0392b;
+            color: white;
+        }
         
         /* Messages */
         .message {
-            padding: 15px;
-            border-radius: 5px;
+            padding: 16px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .message.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        .message.success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        /* Training Library */
+        .training-sector-select {
+            padding: 12px 16px;
+            border-radius: 4px;
+            border: 1px solid var(--so-border);
+            font-family: 'Libre Baskerville', serif;
+            font-size: 14px;
+            min-width: 280px;
+            background: var(--so-white);
+        }
+        .training-sector-select:focus {
+            outline: none;
+            border-color: var(--so-green);
+        }
+        
+        .training-stats {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(62, 119, 51, 0.08);
+            border-radius: 4px;
+            color: var(--so-green);
+            font-weight: 600;
             margin-bottom: 15px;
         }
-        .message.error { background: #f8d7da; color: #721c24; }
-        .message.success { background: #d4edda; color: #155724; }
+        
+        .sector-group {
+            margin: 12px 0;
+            padding: 14px 18px;
+            background: var(--so-cream);
+            border-radius: 6px;
+            border: 1px solid var(--so-border);
+        }
+        .sector-group strong {
+            color: var(--so-dark-teal);
+            font-family: 'Cormorant', serif;
+        }
+        .sector-group small {
+            color: var(--so-gray-light);
+            display: block;
+            margin-top: 6px;
+            font-style: italic;
+        }
         
         .hidden { display: none !important; }
+        
+        /* Footer text */
+        .footer-note {
+            text-align: center;
+            color: var(--so-gray-light);
+            font-size: 12px;
+            font-style: italic;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--so-border);
+        }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <h1>📊 DataPack Platform</h1>
+        <div class="brand">
+            <div class="brand-icon">🌲</div>
+            <h1>DataPack Platform</h1>
+        </div>
         <div class="user-info" id="userInfo" style="display: none;">
             <span id="userName"></span>
-            <button onclick="logout()">Logout</button>
+            <button onclick="logout()">Sign Out</button>
         </div>
     </nav>
 
     <!-- Auth Section -->
     <div class="auth-container" id="authSection">
         <div class="auth-box" id="loginBox">
-            <h2>Login</h2>
+            <h2>Welcome Back</h2>
             <div id="loginError" class="message error hidden"></div>
             <form onsubmit="login(event)">
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" id="loginUsername" required>
+                    <input type="text" id="loginUsername" required placeholder="Enter username">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="loginPassword" required>
+                    <input type="password" id="loginPassword" required placeholder="Enter password">
                 </div>
-                <button type="submit" class="btn">Login</button>
+                <button type="submit" class="btn">Sign In</button>
             </form>
-            <p class="auth-switch" style="color: #999; font-size: 13px;">Contact admin for account access</p>
+            <p class="auth-switch">Contact your administrator for account access</p>
         </div>
     </div>
 
@@ -204,25 +455,26 @@
         
         <!-- Upload Card -->
         <div class="card">
-            <h3>📁 Upload Data Files</h3>
+            <h3>Upload Data Files</h3>
+            <p class="card-subtitle">Upload Excel or CSV files to generate your data pack</p>
             <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
                 <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv">
-                <div style="font-size: 48px;">📤</div>
-                <p>Click or drag files here to upload</p>
-                <p style="font-size: 12px; color: #999;">Supports .xlsx, .xls, .csv</p>
+                <div class="icon">📄</div>
+                <p><strong>Click or drag files here</strong></p>
+                <p class="hint">Supports .xlsx, .xls, and .csv formats</p>
             </div>
             <div class="file-list" id="fileList"></div>
-            <button class="btn" id="uploadBtn" onclick="uploadFiles()" style="display: none;">Upload Files</button>
+            <button class="btn btn-green" id="uploadBtn" onclick="uploadFiles()" style="display: none; width: auto; padding: 14px 40px; margin-top: 20px;">Upload Files</button>
         </div>
 
         <!-- Processing Card -->
         <div class="card hidden" id="processCard">
-            <h3>⚙️ Process & Generate</h3>
+            <h3>Generate Data Pack</h3>
             <div class="form-group">
                 <label>Data Pack Name</label>
-                <input type="text" id="packName" value="Data Pack" style="width: 300px;">
+                <input type="text" id="packName" value="Data Pack" style="max-width: 400px;">
             </div>
-            <button class="btn" onclick="processAndGenerate()">Generate Data Pack</button>
+            <button class="btn btn-green" onclick="processAndGenerate()" style="width: auto; padding: 14px 40px;">Generate Data Pack</button>
             <div class="progress-bar hidden" id="progressBar">
                 <div class="progress" id="progress" style="width: 0%"></div>
             </div>
@@ -230,51 +482,49 @@
 
         <!-- Results Card -->
         <div class="card results" id="resultsCard">
-            <h3>✅ Generated Outputs</h3>
+            <h3>Generated Outputs</h3>
+            <p class="card-subtitle">Your data pack is ready for download</p>
             <div id="downloadLinks"></div>
         </div>
 
         <!-- Sessions Card -->
         <div class="card">
-            <h3>📋 Recent Sessions</h3>
+            <h3>Recent Sessions</h3>
             <div class="session-list" id="sessionList"></div>
         </div>
 
         <!-- Training Library Card -->
         <div class="card">
-            <h3>🧠 Training Library</h3>
-            <p style="color: #666; margin-bottom: 15px;">Upload example data packs to train the AI. More examples = smarter outputs.</p>
+            <h3>Training Library</h3>
+            <p class="card-subtitle">Upload example data packs to improve AI-generated outputs</p>
             
             <div class="form-group">
                 <label>Sector / Category</label>
-                <select id="trainingSector" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; width: 200px;">
+                <select id="trainingSector" class="training-sector-select">
                     <option value="general">General</option>
-                    <option value="healthcare">Healthcare</option>
-                    <option value="services">Services</option>
-                    <option value="manufacturing">Manufacturing</option>
-                    <option value="technology">Technology</option>
-                    <option value="retail">Retail</option>
-                    <option value="financial_services">Financial Services</option>
                 </select>
             </div>
             
-            <div class="upload-area" id="trainingUploadArea" onclick="document.getElementById('trainingFileInput').click()" style="border-color: #3E7733;">
+            <div class="upload-area" id="trainingUploadArea" onclick="document.getElementById('trainingFileInput').click()">
                 <input type="file" id="trainingFileInput" multiple accept=".xlsx,.xls,.pptx,.ppt,.csv">
-                <div style="font-size: 48px;">🎓</div>
-                <p>Upload example PPT and Excel files</p>
-                <p style="font-size: 12px; color: #999;">These teach the AI what good outputs look like</p>
+                <div class="icon">📚</div>
+                <p><strong>Upload example files</strong></p>
+                <p class="hint">PPT and Excel examples help the AI learn your format</p>
             </div>
             <div class="file-list" id="trainingFileList"></div>
-            <button class="btn" id="trainingUploadBtn" onclick="uploadTrainingFiles()" style="display: none; background: #3E7733;">Upload Training Files</button>
+            <button class="btn btn-green" id="trainingUploadBtn" onclick="uploadTrainingFiles()" style="display: none; width: auto; padding: 14px 40px; margin-top: 20px;">Upload Training Files</button>
             
-            <div id="trainingLibrary" style="margin-top: 20px;"></div>
+            <div id="trainingLibrary" style="margin-top: 25px;"></div>
         </div>
+        
+        <p class="footer-note">Confidential — Do Not Distribute</p>
     </div>
 
     <script>
         let token = localStorage.getItem('token');
         let currentSessionId = null;
         let selectedFiles = [];
+        let sectors = [];
 
         // Check auth on load
         if (token) {
@@ -325,35 +575,6 @@
             }
         }
 
-        async function register(e) {
-            e.preventDefault();
-            const formData = new FormData();
-            formData.append('username', document.getElementById('regUsername').value);
-            formData.append('password', document.getElementById('regPassword').value);
-            formData.append('email', document.getElementById('regEmail').value);
-            formData.append('full_name', document.getElementById('regFullName').value);
-            formData.append('invite_code', document.getElementById('regInviteCode').value);
-            
-            try {
-                const res = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    token = data.access_token;
-                    localStorage.setItem('token', token);
-                    checkAuth();
-                } else {
-                    const err = await res.json();
-                    showError('registerError', err.detail || 'Registration failed');
-                }
-            } catch (e) {
-                showError('registerError', 'Connection error');
-            }
-        }
-
         function logout() {
             token = null;
             localStorage.removeItem('token');
@@ -362,20 +583,35 @@
             document.getElementById('userInfo').style.display = 'none';
         }
 
-        function showLogin() {
-            document.getElementById('loginBox').classList.remove('hidden');
-            document.getElementById('registerBox').classList.add('hidden');
-        }
-
-        function showRegister() {
-            document.getElementById('loginBox').classList.add('hidden');
-            document.getElementById('registerBox').classList.remove('hidden');
-        }
-
         function showError(elementId, message) {
             const el = document.getElementById(elementId);
             el.textContent = message;
             el.classList.remove('hidden');
+        }
+
+        // Load sectors from API
+        async function loadSectors() {
+            try {
+                const res = await fetch('/api/sectors');
+                if (res.ok) {
+                    const data = await res.json();
+                    sectors = data.sectors;
+                    populateSectorDropdown();
+                }
+            } catch (e) {
+                console.error('Failed to load sectors:', e);
+            }
+        }
+
+        function populateSectorDropdown() {
+            const select = document.getElementById('trainingSector');
+            select.innerHTML = '<option value="general">General</option>';
+            sectors.forEach(sector => {
+                const option = document.createElement('option');
+                option.value = sector;
+                option.textContent = sector;
+                select.appendChild(option);
+            });
         }
 
         // File handling
@@ -415,7 +651,7 @@
                 </div>
             `).join('');
             
-            document.getElementById('uploadBtn').style.display = selectedFiles.length ? 'block' : 'none';
+            document.getElementById('uploadBtn').style.display = selectedFiles.length ? 'inline-block' : 'none';
         }
 
         function removeFile(index) {
@@ -442,7 +678,7 @@
                     selectedFiles = [];
                     renderFileList();
                     document.getElementById('processCard').classList.remove('hidden');
-                    showMessage('Files uploaded successfully!', 'success');
+                    showMessage('Files uploaded successfully', 'success');
                     loadSessions();
                 } else {
                     showMessage('Upload failed', 'error');
@@ -460,7 +696,6 @@
             progressBar.classList.remove('hidden');
             
             try {
-                // Process
                 progress.style.width = '30%';
                 const processRes = await fetch(`/api/process/${currentSessionId}`, {
                     method: 'POST',
@@ -469,7 +704,6 @@
                 
                 if (!processRes.ok) throw new Error('Processing failed');
                 
-                // Generate
                 progress.style.width = '60%';
                 const packName = document.getElementById('packName').value;
                 const formData = new FormData();
@@ -486,22 +720,21 @@
                 const data = await genRes.json();
                 progress.style.width = '100%';
                 
-                // Show downloads
                 const downloads = document.getElementById('downloadLinks');
                 downloads.innerHTML = `
                     <a href="/api/download/${currentSessionId}/${data.outputs.ppt}" 
                        class="download-btn" 
                        onclick="downloadFile(event, '${currentSessionId}', '${data.outputs.ppt}')">
-                        📊 Download PPT
+                        <span class="icon">📊</span> Download PowerPoint
                     </a>
                     <a href="/api/download/${currentSessionId}/${data.outputs.excel}" 
                        class="download-btn"
                        onclick="downloadFile(event, '${currentSessionId}', '${data.outputs.excel}')">
-                        📗 Download Excel
+                        <span class="icon">📗</span> Download Excel
                     </a>
                 `;
                 document.getElementById('resultsCard').style.display = 'block';
-                showMessage('Data pack generated successfully!', 'success');
+                showMessage('Data pack generated successfully', 'success');
                 
             } catch (e) {
                 showMessage(e.message, 'error');
@@ -540,14 +773,14 @@
         function renderSessions(sessions) {
             const list = document.getElementById('sessionList');
             if (!sessions.length) {
-                list.innerHTML = '<p style="color: #666;">No sessions yet</p>';
+                list.innerHTML = '<p style="color: var(--so-gray); font-style: italic;">No sessions yet</p>';
                 return;
             }
             
             list.innerHTML = sessions.slice(0, 10).map(s => `
                 <div class="session-item">
                     <div>
-                        <strong>${s.files.join(', ')}</strong><br>
+                        <strong>${s.files.join(', ')}</strong>
                         <small>${new Date(s.timestamp).toLocaleString()}</small>
                     </div>
                     <div class="actions">
@@ -580,8 +813,7 @@
             setTimeout(() => area.innerHTML = '', 5000);
         }
 
-        // ============ TRAINING LIBRARY ============
-        
+        // Training Library
         let trainingFiles = [];
         
         const trainingUploadArea = document.getElementById('trainingUploadArea');
@@ -617,12 +849,12 @@
             const list = document.getElementById('trainingFileList');
             list.innerHTML = trainingFiles.map((f, i) => `
                 <div class="file-item">
-                    <span>🎓 ${f.name}</span>
+                    <span>📚 ${f.name}</span>
                     <span class="remove" onclick="removeTrainingFile(${i})">✕</span>
                 </div>
             `).join('');
             
-            document.getElementById('trainingUploadBtn').style.display = trainingFiles.length ? 'block' : 'none';
+            document.getElementById('trainingUploadBtn').style.display = trainingFiles.length ? 'inline-block' : 'none';
         }
 
         function removeTrainingFile(index) {
@@ -649,10 +881,11 @@
                     const data = await res.json();
                     trainingFiles = [];
                     renderTrainingFileList();
-                    showMessage(`Uploaded ${data.files_uploaded.length} training files to ${data.sector}!`, 'success');
+                    showMessage(`Uploaded ${data.files_uploaded.length} training files to ${data.sector}`, 'success');
                     loadTrainingLibrary();
                 } else {
-                    showMessage('Upload failed', 'error');
+                    const err = await res.json();
+                    showMessage(err.detail || 'Upload failed', 'error');
                 }
             } catch (e) {
                 showMessage('Connection error', 'error');
@@ -674,17 +907,17 @@
         function renderTrainingLibrary(data) {
             const container = document.getElementById('trainingLibrary');
             if (!data.total_files) {
-                container.innerHTML = '<p style="color: #666;">No training files yet. Upload example data packs to improve AI quality.</p>';
+                container.innerHTML = '<p style="color: var(--so-gray); font-style: italic;">No training files yet. Upload example data packs to improve AI quality.</p>';
                 return;
             }
             
-            let html = `<p style="color: #3E7733; font-weight: bold;">📚 ${data.total_files} training files loaded</p>`;
+            let html = `<div class="training-stats">📚 ${data.total_files} training files loaded</div>`;
             
             for (const [sector, info] of Object.entries(data.sectors)) {
                 html += `
-                    <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
-                        <strong>${sector}</strong> (${info.count} files)<br>
-                        <small style="color: #666;">${info.files.slice(0, 3).join(', ')}${info.files.length > 3 ? '...' : ''}</small>
+                    <div class="sector-group">
+                        <strong>${sector}</strong> (${info.count} files)
+                        <small>${info.files.slice(0, 3).join(', ')}${info.files.length > 3 ? '...' : ''}</small>
                     </div>
                 `;
             }
@@ -692,7 +925,6 @@
             container.innerHTML = html;
         }
 
-        // Load training library on dashboard load
         function showDashboard(user) {
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
@@ -700,6 +932,7 @@
             document.getElementById('userName').textContent = user.full_name || user.username;
             loadSessions();
             loadTrainingLibrary();
+            loadSectors();
         }
     </script>
 </body>
