@@ -13,11 +13,16 @@ import uuid
 from datetime import datetime
 import json
 
-from .config import UPLOAD_DIR, OUTPUT_DIR, TEMPLATE_DIR, BASE_DIR, OPENAI_API_KEY
+from .config import UPLOAD_DIR, OUTPUT_DIR, TEMPLATE_DIR, BASE_DIR, OPENAI_API_KEY, DATA_DIR
 
-# Training library directory
-TRAINING_DIR = BASE_DIR / "training_library"
-TRAINING_DIR.mkdir(parents=True, exist_ok=True)
+# Training library directory (uses persistent disk on Render)
+TRAINING_DIR = DATA_DIR / "training_library"
+try:
+    TRAINING_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    # Fallback if disk not available
+    TRAINING_DIR = BASE_DIR / "training_library"
+    TRAINING_DIR.mkdir(parents=True, exist_ok=True)
 from .auth import (
     User, Token, authenticate_user, create_access_token, 
     get_current_user, create_user, get_users_db
