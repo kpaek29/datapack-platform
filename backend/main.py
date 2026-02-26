@@ -34,6 +34,7 @@ from .ai_analyzer import SmartDataTransformer
 from .datapack_generator import generate_datapack
 from .sectors import SECTORS, SECTOR_CATEGORIES, get_all_sectors, get_sectors_by_category, validate_sector
 from .smart_generator import SmartPPTGenerator, IterativeAnalyzer, QualityValidator, SmartTableFormatter, AnalysisSuggester
+from .calculations import DataPackCalculations, detect_columns
 
 app = FastAPI(
     title="DataPack Platform",
@@ -607,6 +608,215 @@ async def list_available_analyses(current_user: User = Depends(get_current_user)
     """List all available analysis types"""
     return {
         "analyses": IterativeAnalyzer.ANALYSIS_TYPES
+    }
+
+
+# ============ COLUMN MAPPING & GUIDED GENERATION ============
+
+@app.post("/api/detect-columns/{session_id}")
+async def detect_columns_endpoint(
+    session_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Detect columns in uploaded data and return all columns for mapping
+    """
+    session_dir = UPLOAD_DIR / session_id
+    
+    if not session_dir.exists():
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    files = list(session_dir.glob("*.xlsx")) + list(session_dir.glob("*.xls")) + list(session_dir.glob("*.csv"))
+    
+    if not files:
+        raise HTTPException(status_code=400, detail="No data files found")
+    
+    # Load first file
+    filepath = files[0]
+    try:
+        if str(filepath).endswith('.csv'):
+            df = pd.read_csv(filepath)
+        else:
+            xlsx = pd.ExcelFile(filepath)
+            df = pd.read_excel(xlsx, sheet_name=xlsx.sheet_names[0])
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not read file: {str(e)}")
+    
+    # Detect columns
+    detected = detect_columns(df)
+    
+    # Get all columns with sample data
+    columns_info = []
+    for col in df.columns:
+        sample = df[col].dropna().head(3).tolist()
+        sample_str = [str(s)[:30] for s in sample]
+        columns_info.append({
+            'name': str(col),
+            'dtype': str(df[col].dtype),
+            'sample': sample_str,
+            'non_null': int(df[col].notna().sum()),
+            'total': len(df)
+        })
+    
+    return {
+        "session_id": session_id,
+        "file": filepath.name,
+        "rows": len(df),
+        "columns": columns_info,
+        "detected": detected,
+        "available_analyses": [
+            {"id": "top_customers", "name": "Top Customers", "requires": ["customer", "revenue"]},
+            {"id": "concentration", "name": "Customer Concentration", "requires": ["customer", "revenue"]},
+            {"id": "retention", "name": "Customer Retention", "requires": ["customer", "date"]},
+            {"id": "revenue_by_period", "name": "Revenue by Period", "requires": ["date", "revenue"]},
+            {"id": "revenue_by_segment", "name": "Revenue by Segment", "requires": ["segment", "revenue"]},
+            {"id": "yoy_comparison", "name": "Year-over-Year", "requires": ["date", "revenue"]},
+            {"id": "cohort", "name": "Cohort Analysis", "requires": ["customer", "date"]}
+        ]
+    }
+
+
+@app.post("/api/generate-with-mapping/{session_id}")
+async def generate_with_mapping(
+    session_id: str,
+    company_name: str = Form("Company"),
+    customer_col: str = Form(None),
+    revenue_col: str = Form(None),
+    date_col: str = Form(None),
+    segment_col: str = Form(None),
+    analyses: str = Form("[]"),  # JSON array of analysis IDs
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate data pack with explicit column mappings
+    """
+    session_dir = UPLOAD_DIR / session_id
+    output_dir = OUTPUT_DIR / session_id
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    if not session_dir.exists():
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Parse analyses
+    try:
+        selected_analyses = json.loads(analyses)
+    except:
+        selected_analyses = []
+    
+    # Load data
+    files = list(session_dir.glob("*.xlsx")) + list(session_dir.glob("*.xls")) + list(session_dir.glob("*.csv"))
+    if not files:
+        raise HTTPException(status_code=400, detail="No data files found")
+    
+    filepath = files[0]
+    try:
+        if str(filepath).endswith('.csv'):
+            df = pd.read_csv(filepath)
+        else:
+            xlsx = pd.ExcelFile(filepath)
+            df = pd.read_excel(xlsx, sheet_name=xlsx.sheet_names[0])
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not read file: {str(e)}")
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    calc = DataPackCalculations()
+    
+    # Run selected analyses
+    results = {}
+    excel_sheets = {}
+    
+    if 'top_customers' in selected_analyses and customer_col and revenue_col:
+        try:
+            results['top_customers'] = calc.top_customers(df, customer_col, revenue_col)
+            excel_sheets['Top Customers'] = results['top_customers']
+        except Exception as e:
+            results['top_customers_error'] = str(e)
+    
+    if 'concentration' in selected_analyses and customer_col and revenue_col:
+        try:
+            results['concentration'] = calc.customer_concentration(df, customer_col, revenue_col)
+            excel_sheets['Concentration'] = results['concentration']
+        except Exception as e:
+            results['concentration_error'] = str(e)
+    
+    if 'retention' in selected_analyses and customer_col and date_col:
+        try:
+            results['retention'] = calc.customer_retention(df, customer_col, date_col)
+            excel_sheets['Retention'] = results['retention']
+        except Exception as e:
+            results['retention_error'] = str(e)
+    
+    if 'revenue_by_period' in selected_analyses and date_col and revenue_col:
+        try:
+            results['revenue_by_period'] = calc.revenue_by_period(df, date_col, revenue_col)
+            excel_sheets['Revenue by Period'] = results['revenue_by_period']
+        except Exception as e:
+            results['revenue_by_period_error'] = str(e)
+    
+    if 'revenue_by_segment' in selected_analyses and segment_col and revenue_col:
+        try:
+            results['revenue_by_segment'] = calc.revenue_by_segment(df, segment_col, revenue_col)
+            excel_sheets['Revenue by Segment'] = results['revenue_by_segment']
+        except Exception as e:
+            results['revenue_by_segment_error'] = str(e)
+    
+    if 'yoy_comparison' in selected_analyses and date_col and revenue_col:
+        try:
+            results['yoy_comparison'] = calc.yoy_comparison(df, date_col, revenue_col)
+            excel_sheets['YoY Comparison'] = results['yoy_comparison']
+        except Exception as e:
+            results['yoy_comparison_error'] = str(e)
+    
+    if 'cohort' in selected_analyses and customer_col and date_col:
+        try:
+            results['cohort'] = calc.cohort_analysis(df, customer_col, date_col)
+            excel_sheets['Cohort Analysis'] = results['cohort']
+        except Exception as e:
+            results['cohort_error'] = str(e)
+    
+    # Also add raw data
+    excel_sheets['Raw Data'] = df
+    
+    # Generate PPT
+    ppt_path = output_dir / f"{company_name.replace(' ', '_')}_Data_Pack_{timestamp}.pptx"
+    ppt = SmartPPTGenerator(ppt_path, company_name, datetime.now().strftime("%B %Y"))
+    
+    ppt.add_title_slide()
+    
+    # Add analysis slides
+    analysis_titles = {
+        'top_customers': f'Top Customers – {company_name}',
+        'concentration': f'Customer Concentration – {company_name}',
+        'retention': f'Customer Retention – {company_name}',
+        'revenue_by_period': f'Revenue by Period – {company_name}',
+        'revenue_by_segment': f'Revenue by Segment – {company_name}',
+        'yoy_comparison': f'Year-over-Year Comparison – {company_name}',
+        'cohort': f'Cohort Analysis – {company_name}'
+    }
+    
+    for analysis_id, title in analysis_titles.items():
+        if analysis_id in results and isinstance(results[analysis_id], pd.DataFrame):
+            if not results[analysis_id].empty:
+                ppt.add_table_slide(title, results[analysis_id])
+    
+    ppt.save()
+    
+    # Generate Excel
+    excel_path = output_dir / f"{company_name.replace(' ', '_')}_Data_Pack_{timestamp}.xlsx"
+    with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+        for sheet_name, sheet_df in excel_sheets.items():
+            if isinstance(sheet_df, pd.DataFrame) and not sheet_df.empty:
+                sheet_df.to_excel(writer, sheet_name=sheet_name[:31], index=False)
+    
+    return {
+        "session_id": session_id,
+        "company_name": company_name,
+        "analyses_run": [k for k in results.keys() if not k.endswith('_error')],
+        "errors": {k: v for k, v in results.items() if k.endswith('_error')},
+        "outputs": {
+            "ppt": ppt_path.name,
+            "excel": excel_path.name
+        }
     }
 
 

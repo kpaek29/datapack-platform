@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DataPack Platform | Silver Oak</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap">
     <style>
         :root {
             --so-dark-teal: #033333;
             --so-green: #3E7733;
             --so-green-light: #4a8f3d;
+            --so-navy: #08468D;
             --so-gray: #6B6B6B;
             --so-gray-light: #85868A;
             --so-cream: #f9f8f6;
@@ -31,10 +32,8 @@
         h1, h2, h3, h4, h5 {
             font-family: 'Cormorant', Georgia, serif;
             font-weight: 600;
-            letter-spacing: 0.02em;
         }
         
-        /* Navbar */
         .navbar {
             background: var(--so-dark-teal);
             color: var(--so-white);
@@ -42,35 +41,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(3, 51, 51, 0.15);
         }
-        .navbar h1 {
-            font-size: 24px;
-            font-weight: 500;
-            letter-spacing: 0.05em;
-        }
-        .navbar .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .navbar .brand-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--so-green);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        .navbar .user-info {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            font-family: 'Libre Baskerville', serif;
-            font-size: 13px;
-        }
+        .navbar h1 { font-size: 24px; font-weight: 500; }
+        .navbar .user-info { display: flex; align-items: center; gap: 20px; font-size: 13px; }
         .navbar button {
             background: transparent;
             border: 1px solid rgba(255,255,255,0.3);
@@ -78,28 +51,19 @@
             padding: 8px 20px;
             border-radius: 4px;
             cursor: pointer;
-            font-family: 'Libre Baskerville', serif;
+            font-family: inherit;
             font-size: 12px;
-            transition: all 0.2s;
         }
-        .navbar button:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(255,255,255,0.5);
-        }
+        .navbar button:hover { background: rgba(255,255,255,0.1); }
         
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 40px 30px;
-        }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 30px; }
         
-        /* Auth Forms */
+        /* Auth */
         .auth-container {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: calc(100vh - 80px);
-            background: linear-gradient(135deg, var(--so-cream) 0%, #f0efed 100%);
         }
         .auth-box {
             background: var(--so-white);
@@ -107,18 +71,12 @@
             border-radius: 8px;
             box-shadow: 0 4px 30px rgba(3, 51, 51, 0.08);
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
             border: 1px solid var(--so-border);
         }
-        .auth-box h2 {
-            margin-bottom: 30px;
-            text-align: center;
-            font-size: 28px;
-            color: var(--so-dark-teal);
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
+        .auth-box h2 { margin-bottom: 30px; text-align: center; font-size: 28px; }
+        
+        .form-group { margin-bottom: 20px; }
         .form-group label {
             display: block;
             margin-bottom: 8px;
@@ -129,68 +87,42 @@
         }
         .form-group input, .form-group select {
             width: 100%;
-            padding: 14px 16px;
+            padding: 12px 16px;
             border: 1px solid var(--so-border);
             border-radius: 4px;
             font-size: 14px;
-            font-family: 'Libre Baskerville', serif;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
         }
         .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: var(--so-green);
-            box-shadow: 0 0 0 3px rgba(62, 119, 51, 0.1);
         }
         
         .btn {
-            width: 100%;
-            padding: 14px 20px;
+            padding: 14px 28px;
             background: var(--so-dark-teal);
             color: var(--so-white);
             border: none;
             border-radius: 4px;
             font-size: 14px;
-            font-family: 'Libre Baskerville', serif;
+            font-family: inherit;
             cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.2s;
-            letter-spacing: 0.02em;
         }
-        .btn:hover {
-            background: #044444;
-        }
-        .btn-green {
-            background: var(--so-green);
-        }
-        .btn-green:hover {
-            background: var(--so-green-light);
-        }
-        .btn-secondary {
-            background: var(--so-gray);
-        }
+        .btn:hover { background: #044444; }
+        .btn-green { background: var(--so-green); }
+        .btn-green:hover { background: var(--so-green-light); }
+        .btn-block { width: 100%; }
         
-        .auth-switch {
-            text-align: center;
-            margin-top: 25px;
-            color: var(--so-gray-light);
-            font-size: 13px;
-            font-style: italic;
-        }
-        
-        /* Dashboard */
-        .dashboard { display: none; }
-        
+        /* Cards */
         .card {
             background: var(--so-white);
             border-radius: 8px;
             padding: 30px;
             margin-bottom: 25px;
-            box-shadow: 0 2px 15px rgba(3, 51, 51, 0.05);
             border: 1px solid var(--so-border);
         }
         .card h3 {
             margin-bottom: 20px;
-            color: var(--so-dark-teal);
             font-size: 20px;
             padding-bottom: 15px;
             border-bottom: 2px solid var(--so-green);
@@ -202,41 +134,23 @@
             font-style: italic;
         }
         
-        /* Upload Area */
+        /* Upload */
         .upload-area {
             border: 2px dashed var(--so-border);
             border-radius: 8px;
-            padding: 50px 40px;
+            padding: 50px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             background: var(--so-cream);
         }
-        .upload-area:hover {
-            border-color: var(--so-green);
-            background: rgba(62, 119, 51, 0.03);
-        }
-        .upload-area.dragover {
-            border-color: var(--so-green);
-            background: rgba(62, 119, 51, 0.08);
-        }
+        .upload-area:hover { border-color: var(--so-green); }
+        .upload-area.dragover { border-color: var(--so-green); background: rgba(62, 119, 51, 0.05); }
         .upload-area input { display: none; }
-        .upload-area .icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-        .upload-area p {
-            color: var(--so-gray);
-            margin-top: 10px;
-        }
-        .upload-area .hint {
-            font-size: 12px;
-            color: var(--so-gray-light);
-            font-style: italic;
-        }
+        .upload-area .icon { font-size: 48px; margin-bottom: 15px; }
+        .upload-area p { color: var(--so-gray); }
         
-        /* File List */
-        .file-list { margin-top: 20px; }
+        /* File list */
         .file-item {
             display: flex;
             justify-content: space-between;
@@ -244,17 +158,80 @@
             padding: 12px 16px;
             background: var(--so-cream);
             border-radius: 4px;
-            margin-bottom: 8px;
+            margin-top: 15px;
             border: 1px solid var(--so-border);
         }
-        .file-item .remove {
-            color: #c0392b;
-            cursor: pointer;
-            font-size: 18px;
-            opacity: 0.7;
-            transition: opacity 0.2s;
+        .file-item .remove { color: #c0392b; cursor: pointer; }
+        
+        /* Column mapping */
+        .mapping-section {
+            background: rgba(62, 119, 51, 0.05);
+            border: 1px solid rgba(62, 119, 51, 0.2);
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
         }
-        .file-item .remove:hover { opacity: 1; }
+        .mapping-section h4 {
+            color: var(--so-green);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .mapping-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .mapping-item label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--so-gray);
+            margin-bottom: 5px;
+            display: block;
+        }
+        .mapping-item select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--so-border);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        .column-sample {
+            font-size: 11px;
+            color: var(--so-gray-light);
+            margin-top: 4px;
+            font-style: italic;
+        }
+        
+        /* Analyses */
+        .analysis-options { margin: 20px 0; }
+        .analysis-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--so-cream);
+            border: 1px solid var(--so-border);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .analysis-option:hover { border-color: var(--so-green); }
+        .analysis-option.selected {
+            background: rgba(62, 119, 51, 0.1);
+            border-color: var(--so-green);
+        }
+        .analysis-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .analysis-option input { margin-right: 12px; }
+        .analysis-option .name { font-weight: 600; }
+        .analysis-option .requires {
+            font-size: 11px;
+            color: var(--so-gray-light);
+            margin-left: auto;
+        }
         
         /* Progress */
         .progress-bar {
@@ -271,7 +248,6 @@
         }
         
         /* Results */
-        .results { display: none; }
         .download-btn {
             display: inline-flex;
             align-items: center;
@@ -282,257 +258,22 @@
             text-decoration: none;
             border-radius: 4px;
             margin: 10px 15px 10px 0;
-            font-family: 'Libre Baskerville', serif;
-            font-size: 14px;
-            transition: background 0.2s;
+            font-family: inherit;
         }
-        .download-btn:hover {
-            background: var(--so-green-light);
-        }
-        .download-btn .icon { font-size: 20px; }
-        
-        /* Sessions */
-        .session-list { margin-top: 20px; }
-        .session-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            background: var(--so-cream);
-            border-radius: 6px;
-            margin-bottom: 12px;
-            border: 1px solid var(--so-border);
-        }
-        .session-item strong {
-            color: var(--so-dark-teal);
-            font-family: 'Cormorant', serif;
-            font-size: 16px;
-        }
-        .session-item small {
-            color: var(--so-gray-light);
-            font-style: italic;
-        }
-        .session-item .actions {
-            display: flex;
-            gap: 8px;
-        }
-        .session-item .actions button {
-            padding: 8px 16px;
-            border: 1px solid var(--so-border);
-            background: var(--so-white);
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: 'Libre Baskerville', serif;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-        .session-item .actions button:hover {
-            border-color: var(--so-green);
-            color: var(--so-green);
-        }
-        .session-item .actions .delete {
-            background: transparent;
-            border-color: #c0392b;
-            color: #c0392b;
-        }
-        .session-item .actions .delete:hover {
-            background: #c0392b;
-            color: white;
-        }
+        .download-btn:hover { background: var(--so-green-light); }
         
         /* Messages */
         .message {
             padding: 16px 20px;
             border-radius: 6px;
             margin-bottom: 20px;
-            font-size: 14px;
         }
-        .message.error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-        .message.success {
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        
-        /* Training Library */
-        .training-sector-select {
-            padding: 12px 16px;
-            border-radius: 4px;
-            border: 1px solid var(--so-border);
-            font-family: 'Libre Baskerville', serif;
-            font-size: 14px;
-            min-width: 280px;
-            background: var(--so-white);
-        }
-        .training-sector-select:focus {
-            outline: none;
-            border-color: var(--so-green);
-        }
-        
-        .training-stats {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            background: rgba(62, 119, 51, 0.08);
-            border-radius: 4px;
-            color: var(--so-green);
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-        
-        .sector-group {
-            margin: 12px 0;
-            padding: 14px 18px;
-            background: var(--so-cream);
-            border-radius: 6px;
-            border: 1px solid var(--so-border);
-        }
-        .sector-group strong {
-            color: var(--so-dark-teal);
-            font-family: 'Cormorant', serif;
-        }
-        .sector-group small {
-            color: var(--so-gray-light);
-            display: block;
-            margin-top: 6px;
-            font-style: italic;
-        }
+        .message.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .message.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .message.info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
         
         .hidden { display: none !important; }
         
-        /* Analysis Request Interface */
-        .analysis-chat {
-            border: 1px solid var(--so-border);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 20px;
-        }
-        .analysis-messages {
-            max-height: 300px;
-            overflow-y: auto;
-            padding: 20px;
-            background: var(--so-cream);
-        }
-        .analysis-message {
-            margin-bottom: 15px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            max-width: 85%;
-        }
-        .analysis-message.user {
-            background: var(--so-dark-teal);
-            color: var(--so-white);
-            margin-left: auto;
-        }
-        .analysis-message.system {
-            background: var(--so-white);
-            border: 1px solid var(--so-border);
-        }
-        .analysis-input-area {
-            display: flex;
-            gap: 10px;
-            padding: 15px;
-            background: var(--so-white);
-            border-top: 1px solid var(--so-border);
-        }
-        .analysis-input-area input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid var(--so-border);
-            border-radius: 4px;
-            font-family: 'Libre Baskerville', serif;
-            font-size: 14px;
-        }
-        .analysis-input-area input:focus {
-            outline: none;
-            border-color: var(--so-green);
-        }
-        .analysis-input-area button {
-            padding: 12px 24px;
-            background: var(--so-green);
-            color: var(--so-white);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: 'Libre Baskerville', serif;
-        }
-        .analysis-input-area button:hover {
-            background: var(--so-green-light);
-        }
-        
-        /* Analysis chips */
-        .analysis-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 15px;
-        }
-        .analysis-chip {
-            padding: 8px 16px;
-            background: var(--so-white);
-            border: 1px solid var(--so-border);
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-        .analysis-chip:hover {
-            border-color: var(--so-green);
-            color: var(--so-green);
-        }
-        .analysis-chip.selected {
-            background: var(--so-green);
-            color: var(--so-white);
-            border-color: var(--so-green);
-        }
-        
-        /* Suggested analyses section */
-        #suggestedAnalysesSection {
-            background: linear-gradient(135deg, rgba(62, 119, 51, 0.08) 0%, rgba(62, 119, 51, 0.03) 100%);
-            border: 1px solid rgba(62, 119, 51, 0.2);
-            border-radius: 8px;
-            padding: 20px;
-        }
-        #suggestedChips .analysis-chip {
-            background: var(--so-green);
-            color: var(--so-white);
-            border-color: var(--so-green);
-        }
-        #suggestedChips .analysis-chip:not(.selected) {
-            background: var(--so-white);
-            color: var(--so-gray);
-            border-color: var(--so-border);
-        }
-        
-        /* Quality indicator */
-        .quality-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .quality-badge.good {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        .quality-badge.warning {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        .quality-badge.poor {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
-        /* Footer text */
         .footer-note {
             text-align: center;
             color: var(--so-gray-light);
@@ -542,150 +283,154 @@
             padding-top: 20px;
             border-top: 1px solid var(--so-border);
         }
+        
+        /* Step indicator */
+        .steps {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            color: var(--so-gray-light);
+        }
+        .step.active { color: var(--so-green); font-weight: 600; }
+        .step.done { color: var(--so-dark-teal); }
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--so-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 13px;
+        }
+        .step.active .step-num { background: var(--so-green); color: white; }
+        .step.done .step-num { background: var(--so-dark-teal); color: white; }
+        .step-divider {
+            width: 40px;
+            height: 2px;
+            background: var(--so-border);
+            margin: 0 15px;
+        }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <div class="brand">
-            <div class="brand-icon">🌲</div>
-            <h1>DataPack Platform</h1>
-        </div>
+        <h1>🌲 DataPack Platform</h1>
         <div class="user-info" id="userInfo" style="display: none;">
             <span id="userName"></span>
             <button onclick="logout()">Sign Out</button>
         </div>
     </nav>
 
-    <!-- Auth Section -->
+    <!-- Auth -->
     <div class="auth-container" id="authSection">
-        <div class="auth-box" id="loginBox">
-            <h2>Welcome Back</h2>
+        <div class="auth-box">
+            <h2>Welcome</h2>
             <div id="loginError" class="message error hidden"></div>
             <form onsubmit="login(event)">
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" id="loginUsername" required placeholder="Enter username">
+                    <input type="text" id="loginUsername" required>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="loginPassword" required placeholder="Enter password">
+                    <input type="password" id="loginPassword" required>
                 </div>
-                <button type="submit" class="btn">Sign In</button>
+                <button type="submit" class="btn btn-block">Sign In</button>
             </form>
-            <p class="auth-switch">Contact your administrator for account access</p>
         </div>
     </div>
 
     <!-- Dashboard -->
-    <div class="container dashboard" id="dashboard">
+    <div class="container hidden" id="dashboard">
         <div id="messageArea"></div>
         
-        <!-- Upload Card -->
-        <div class="card">
-            <h3>Upload Data Files</h3>
-            <p class="card-subtitle">Upload Excel or CSV files to generate your data pack</p>
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-                <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv">
-                <div class="icon">📄</div>
-                <p><strong>Click or drag files here</strong></p>
-                <p class="hint">Supports .xlsx, .xls, and .csv formats</p>
-            </div>
-            <div class="file-list" id="fileList"></div>
-            <button class="btn btn-green" id="uploadBtn" onclick="uploadFiles()" style="display: none; width: auto; padding: 14px 40px; margin-top: 20px;">Upload Files</button>
+        <!-- Steps -->
+        <div class="steps">
+            <div class="step active" id="step1"><span class="step-num">1</span> Upload</div>
+            <div class="step-divider"></div>
+            <div class="step" id="step2"><span class="step-num">2</span> Map Columns</div>
+            <div class="step-divider"></div>
+            <div class="step" id="step3"><span class="step-num">3</span> Generate</div>
         </div>
 
-        <!-- Processing Card -->
-        <div class="card hidden" id="processCard">
-            <h3>Generate Data Pack</h3>
-            <div class="form-group">
-                <label>Company Name</label>
-                <input type="text" id="packName" value="Company" style="max-width: 400px;">
+        <!-- Step 1: Upload -->
+        <div class="card" id="uploadCard">
+            <h3>Upload Data</h3>
+            <p class="card-subtitle">Upload your Excel or CSV file with transaction/customer data</p>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+                <div class="icon">📄</div>
+                <p><strong>Click or drag file here</strong></p>
+                <p style="font-size: 12px; color: var(--so-gray-light);">Excel (.xlsx, .xls) or CSV</p>
             </div>
+            <div id="fileInfo" class="hidden"></div>
+        </div>
+
+        <!-- Step 2: Column Mapping -->
+        <div class="card hidden" id="mappingCard">
+            <h3>Map Your Columns</h3>
+            <p class="card-subtitle">Tell us which columns contain which data</p>
             
-            <!-- AI Suggested Analyses -->
-            <div id="suggestedAnalysesSection" style="margin-top: 20px; display: none;">
-                <label style="display: block; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--so-gray);">
-                    🤖 AI Recommended Analyses
-                </label>
-                <p style="color: var(--so-gray); font-size: 13px; margin-bottom: 12px; font-style: italic;">
-                    Based on your data, we recommend these analyses:
-                </p>
-                <div class="analysis-chips" id="suggestedChips"></div>
-            </div>
-            
-            <!-- Additional Analysis Selection -->
-            <div class="form-group" style="margin-top: 20px;">
-                <label>Additional Analyses (optional)</label>
-                <div class="analysis-chips" id="analysisChips">
-                    <span class="analysis-chip" data-type="top_customers" onclick="toggleAnalysis(this)">Top Customers</span>
-                    <span class="analysis-chip" data-type="customer_concentration" onclick="toggleAnalysis(this)">Customer Concentration</span>
-                    <span class="analysis-chip" data-type="customer_retention" onclick="toggleAnalysis(this)">Customer Retention</span>
-                    <span class="analysis-chip" data-type="revenue_by_segment" onclick="toggleAnalysis(this)">Revenue by Segment</span>
-                    <span class="analysis-chip" data-type="monthly_trends" onclick="toggleAnalysis(this)">Monthly Trends</span>
-                    <span class="analysis-chip" data-type="yoy_comparison" onclick="toggleAnalysis(this)">YoY Comparison</span>
-                    <span class="analysis-chip" data-type="cohort_analysis" onclick="toggleAnalysis(this)">Cohort Analysis</span>
+            <div class="mapping-section">
+                <h4>Column Assignments</h4>
+                <div class="mapping-grid">
+                    <div class="mapping-item">
+                        <label>Customer / Account Name</label>
+                        <select id="colCustomer">
+                            <option value="">-- Select --</option>
+                        </select>
+                        <div class="column-sample" id="sampleCustomer"></div>
+                    </div>
+                    <div class="mapping-item">
+                        <label>Revenue / Amount</label>
+                        <select id="colRevenue">
+                            <option value="">-- Select --</option>
+                        </select>
+                        <div class="column-sample" id="sampleRevenue"></div>
+                    </div>
+                    <div class="mapping-item">
+                        <label>Date</label>
+                        <select id="colDate">
+                            <option value="">-- Select --</option>
+                        </select>
+                        <div class="column-sample" id="sampleDate"></div>
+                    </div>
+                    <div class="mapping-item">
+                        <label>Segment / Category (optional)</label>
+                        <select id="colSegment">
+                            <option value="">-- None --</option>
+                        </select>
+                        <div class="column-sample" id="sampleSegment"></div>
+                    </div>
                 </div>
             </div>
             
-            <button class="btn btn-green" onclick="processAndGenerateV2()" style="width: auto; padding: 14px 40px; margin-top: 20px;">Generate Data Pack</button>
+            <div class="form-group">
+                <label>Company Name</label>
+                <input type="text" id="companyName" value="Company" style="max-width: 300px;">
+            </div>
+            
+            <h4 style="margin: 25px 0 15px;">Select Analyses</h4>
+            <div class="analysis-options" id="analysisOptions"></div>
+            
+            <button class="btn btn-green" onclick="generate()" style="margin-top: 20px;">Generate Data Pack</button>
             <div class="progress-bar hidden" id="progressBar">
                 <div class="progress" id="progress" style="width: 0%"></div>
             </div>
         </div>
-        
-        <!-- Analysis Request Card -->
-        <div class="card hidden" id="analysisCard">
-            <h3>Request Additional Analysis</h3>
-            <p class="card-subtitle">Ask for specific analyses in plain English</p>
-            
-            <div class="analysis-chat">
-                <div class="analysis-messages" id="analysisMessages">
-                    <div class="analysis-message system">
-                        👋 What analysis would you like to add? Try: "Add customer retention analysis" or "Show revenue by segment"
-                    </div>
-                </div>
-                <div class="analysis-input-area">
-                    <input type="text" id="analysisInput" placeholder="e.g., Add customer retention analysis..." onkeypress="if(event.key==='Enter')sendAnalysisRequest()">
-                    <button onclick="sendAnalysisRequest()">Send</button>
-                </div>
-            </div>
-        </div>
 
-        <!-- Results Card -->
-        <div class="card results" id="resultsCard">
-            <h3>Generated Outputs</h3>
-            <p class="card-subtitle">Your data pack is ready for download</p>
+        <!-- Step 3: Results -->
+        <div class="card hidden" id="resultsCard">
+            <h3>Your Data Pack</h3>
+            <p class="card-subtitle">Download your generated files</p>
             <div id="downloadLinks"></div>
-        </div>
-
-        <!-- Sessions Card -->
-        <div class="card">
-            <h3>Recent Sessions</h3>
-            <div class="session-list" id="sessionList"></div>
-        </div>
-
-        <!-- Training Library Card -->
-        <div class="card">
-            <h3>Training Library</h3>
-            <p class="card-subtitle">Upload example data packs to improve AI-generated outputs</p>
-            
-            <div class="form-group">
-                <label>Sector / Category</label>
-                <select id="trainingSector" class="training-sector-select">
-                    <option value="general">General</option>
-                </select>
-            </div>
-            
-            <div class="upload-area" id="trainingUploadArea" onclick="document.getElementById('trainingFileInput').click()">
-                <input type="file" id="trainingFileInput" multiple accept=".xlsx,.xls,.pptx,.ppt,.csv">
-                <div class="icon">📚</div>
-                <p><strong>Upload example files</strong></p>
-                <p class="hint">PPT and Excel examples help the AI learn your format</p>
-            </div>
-            <div class="file-list" id="trainingFileList"></div>
-            <button class="btn btn-green" id="trainingUploadBtn" onclick="uploadTrainingFiles()" style="display: none; width: auto; padding: 14px 40px; margin-top: 20px;">Upload Training Files</button>
-            
-            <div id="trainingLibrary" style="margin-top: 25px;"></div>
+            <button class="btn" onclick="startOver()" style="margin-top: 20px;">Start New Analysis</button>
         </div>
         
         <p class="footer-note">Confidential — Do Not Distribute</p>
@@ -694,14 +439,10 @@
     <script>
         let token = localStorage.getItem('token');
         let currentSessionId = null;
-        let selectedFiles = [];
-        let sectors = [];
-
-        // Check auth on load
-        if (token) {
-            checkAuth();
-        }
-
+        let columnsData = null;
+        
+        if (token) checkAuth();
+        
         async function checkAuth() {
             try {
                 const res = await fetch('/api/auth/me', {
@@ -717,124 +458,81 @@
                 logout();
             }
         }
-
+        
         async function login(e) {
             e.preventDefault();
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-            
             const formData = new FormData();
-            formData.append('username', username);
-            formData.append('password', password);
+            formData.append('username', document.getElementById('loginUsername').value);
+            formData.append('password', document.getElementById('loginPassword').value);
             
             try {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    body: formData
-                });
-                
+                const res = await fetch('/api/auth/login', { method: 'POST', body: formData });
                 if (res.ok) {
-                    const data = await res.json();
-                    token = data.access_token;
+                    token = (await res.json()).access_token;
                     localStorage.setItem('token', token);
                     checkAuth();
                 } else {
-                    showError('loginError', 'Invalid username or password');
+                    document.getElementById('loginError').textContent = 'Invalid credentials';
+                    document.getElementById('loginError').classList.remove('hidden');
                 }
             } catch (e) {
-                showError('loginError', 'Connection error');
+                document.getElementById('loginError').textContent = 'Connection error';
+                document.getElementById('loginError').classList.remove('hidden');
             }
         }
-
+        
         function logout() {
             token = null;
             localStorage.removeItem('token');
             document.getElementById('authSection').style.display = 'flex';
-            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('dashboard').classList.add('hidden');
             document.getElementById('userInfo').style.display = 'none';
         }
-
-        function showError(elementId, message) {
-            const el = document.getElementById(elementId);
-            el.textContent = message;
-            el.classList.remove('hidden');
+        
+        function showDashboard(user) {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('userInfo').style.display = 'flex';
+            document.getElementById('userName').textContent = user.full_name || user.username;
         }
-
-        // Load sectors from API
-        async function loadSectors() {
-            try {
-                const res = await fetch('/api/sectors');
-                if (res.ok) {
-                    const data = await res.json();
-                    sectors = data.sectors;
-                    populateSectorDropdown();
-                }
-            } catch (e) {
-                console.error('Failed to load sectors:', e);
+        
+        function showMessage(text, type = 'info') {
+            document.getElementById('messageArea').innerHTML = `<div class="message ${type}">${text}</div>`;
+            setTimeout(() => document.getElementById('messageArea').innerHTML = '', 5000);
+        }
+        
+        function setStep(num) {
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.classList.remove('active', 'done');
+                if (i < num) step.classList.add('done');
+                if (i === num) step.classList.add('active');
             }
         }
-
-        function populateSectorDropdown() {
-            const select = document.getElementById('trainingSector');
-            select.innerHTML = '<option value="general">General</option>';
-            sectors.forEach(sector => {
-                const option = document.createElement('option');
-                option.value = sector;
-                option.textContent = sector;
-                select.appendChild(option);
-            });
-        }
-
-        // File handling
+        
+        // File upload
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
-
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
+        
+        uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', e => {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                uploadFile(e.dataTransfer.files[0]);
+            }
         });
-
         fileInput.addEventListener('change', () => {
-            handleFiles(fileInput.files);
+            if (fileInput.files.length) uploadFile(fileInput.files[0]);
         });
-
-        function handleFiles(files) {
-            selectedFiles = [...selectedFiles, ...Array.from(files)];
-            renderFileList();
-        }
-
-        function renderFileList() {
-            const list = document.getElementById('fileList');
-            list.innerHTML = selectedFiles.map((f, i) => `
-                <div class="file-item">
-                    <span>📄 ${f.name}</span>
-                    <span class="remove" onclick="removeFile(${i})">✕</span>
-                </div>
-            `).join('');
-            
-            document.getElementById('uploadBtn').style.display = selectedFiles.length ? 'inline-block' : 'none';
-        }
-
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            renderFileList();
-        }
-
-        async function uploadFiles() {
-            if (!selectedFiles.length) return;
+        
+        async function uploadFile(file) {
+            showMessage('Uploading...', 'info');
             
             const formData = new FormData();
-            selectedFiles.forEach(f => formData.append('files', f));
+            formData.append('files', file);
             
             try {
                 const res = await fetch('/api/upload', {
@@ -846,15 +544,17 @@
                 if (res.ok) {
                     const data = await res.json();
                     currentSessionId = data.session_id;
-                    selectedFiles = [];
-                    renderFileList();
-                    document.getElementById('processCard').classList.remove('hidden');
-                    showMessage('Files uploaded successfully — analyzing data...', 'success');
-                    loadSessions();
                     
-                    // Load AI suggestions
-                    await loadSuggestions(currentSessionId);
-                    showMessage('Files uploaded. Review suggested analyses below.', 'success');
+                    document.getElementById('fileInfo').innerHTML = `
+                        <div class="file-item">
+                            <span>📄 ${file.name}</span>
+                            <span class="remove" onclick="startOver()">✕</span>
+                        </div>
+                    `;
+                    document.getElementById('fileInfo').classList.remove('hidden');
+                    
+                    showMessage('File uploaded. Detecting columns...', 'info');
+                    await detectColumns();
                 } else {
                     showMessage('Upload failed', 'error');
                 }
@@ -862,65 +562,194 @@
                 showMessage('Connection error', 'error');
             }
         }
-
-        async function processAndGenerate() {
-            if (!currentSessionId) return;
-            
-            const progressBar = document.getElementById('progressBar');
-            const progress = document.getElementById('progress');
-            progressBar.classList.remove('hidden');
-            
+        
+        async function detectColumns() {
             try {
-                progress.style.width = '30%';
-                const processRes = await fetch(`/api/process/${currentSessionId}`, {
+                const res = await fetch(`/api/detect-columns/${currentSessionId}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
-                if (!processRes.ok) throw new Error('Processing failed');
+                if (res.ok) {
+                    columnsData = await res.json();
+                    populateColumnDropdowns();
+                    populateAnalyses();
+                    
+                    document.getElementById('uploadCard').classList.add('hidden');
+                    document.getElementById('mappingCard').classList.remove('hidden');
+                    setStep(2);
+                    showMessage(`Found ${columnsData.rows} rows with ${columnsData.columns.length} columns`, 'success');
+                } else {
+                    showMessage('Could not analyze file', 'error');
+                }
+            } catch (e) {
+                showMessage('Error analyzing file', 'error');
+            }
+        }
+        
+        function populateColumnDropdowns() {
+            const selects = {
+                'colCustomer': columnsData.detected.customer,
+                'colRevenue': columnsData.detected.revenue,
+                'colDate': columnsData.detected.date,
+                'colSegment': columnsData.detected.segment
+            };
+            
+            for (const [selectId, detectedVal] of Object.entries(selects)) {
+                const select = document.getElementById(selectId);
+                select.innerHTML = selectId === 'colSegment' ? '<option value="">-- None --</option>' : '<option value="">-- Select --</option>';
                 
-                progress.style.width = '60%';
-                const packName = document.getElementById('packName').value;
-                const formData = new FormData();
-                formData.append('pack_name', packName);
+                for (const col of columnsData.columns) {
+                    const opt = document.createElement('option');
+                    opt.value = col.name;
+                    opt.textContent = col.name;
+                    if (detectedVal === col.name) opt.selected = true;
+                    select.appendChild(opt);
+                }
                 
-                const genRes = await fetch(`/api/generate/${currentSessionId}`, {
+                // Show sample on change
+                select.addEventListener('change', () => updateSample(selectId));
+                updateSample(selectId);
+            }
+        }
+        
+        function updateSample(selectId) {
+            const select = document.getElementById(selectId);
+            const sampleId = selectId.replace('col', 'sample');
+            const sampleDiv = document.getElementById(sampleId);
+            
+            if (select.value) {
+                const col = columnsData.columns.find(c => c.name === select.value);
+                if (col && col.sample.length) {
+                    sampleDiv.textContent = `Sample: ${col.sample.join(', ')}`;
+                } else {
+                    sampleDiv.textContent = '';
+                }
+            } else {
+                sampleDiv.textContent = '';
+            }
+            
+            updateAnalysesAvailability();
+        }
+        
+        function populateAnalyses() {
+            const container = document.getElementById('analysisOptions');
+            const analyses = [
+                { id: 'top_customers', name: 'Top Customers', desc: 'Ranked by revenue', requires: ['customer', 'revenue'] },
+                { id: 'concentration', name: 'Customer Concentration', desc: 'Top 1/5/10/20 analysis', requires: ['customer', 'revenue'] },
+                { id: 'retention', name: 'Customer Retention', desc: 'Period over period', requires: ['customer', 'date'] },
+                { id: 'revenue_by_period', name: 'Revenue by Period', desc: 'Monthly/quarterly trends', requires: ['date', 'revenue'] },
+                { id: 'yoy_comparison', name: 'Year-over-Year', desc: 'Compare to prior year', requires: ['date', 'revenue'] },
+                { id: 'revenue_by_segment', name: 'Revenue by Segment', desc: 'Breakdown by category', requires: ['segment', 'revenue'] },
+                { id: 'cohort', name: 'Cohort Analysis', desc: 'Retention by signup period', requires: ['customer', 'date'] }
+            ];
+            
+            container.innerHTML = analyses.map(a => `
+                <label class="analysis-option" data-requires="${a.requires.join(',')}" data-id="${a.id}">
+                    <input type="checkbox" value="${a.id}">
+                    <span>
+                        <span class="name">${a.name}</span><br>
+                        <span style="font-size: 12px; color: var(--so-gray);">${a.desc}</span>
+                    </span>
+                    <span class="requires">Needs: ${a.requires.join(', ')}</span>
+                </label>
+            `).join('');
+            
+            updateAnalysesAvailability();
+        }
+        
+        function updateAnalysesAvailability() {
+            const hasCustomer = !!document.getElementById('colCustomer').value;
+            const hasRevenue = !!document.getElementById('colRevenue').value;
+            const hasDate = !!document.getElementById('colDate').value;
+            const hasSegment = !!document.getElementById('colSegment').value;
+            
+            const available = { customer: hasCustomer, revenue: hasRevenue, date: hasDate, segment: hasSegment };
+            
+            document.querySelectorAll('.analysis-option').forEach(opt => {
+                const requires = opt.dataset.requires.split(',');
+                const canRun = requires.every(r => available[r]);
+                
+                opt.classList.toggle('disabled', !canRun);
+                opt.querySelector('input').disabled = !canRun;
+                
+                if (!canRun) {
+                    opt.querySelector('input').checked = false;
+                }
+            });
+        }
+        
+        async function generate() {
+            const selectedAnalyses = [];
+            document.querySelectorAll('.analysis-option input:checked').forEach(cb => {
+                selectedAnalyses.push(cb.value);
+            });
+            
+            if (selectedAnalyses.length === 0) {
+                showMessage('Please select at least one analysis', 'error');
+                return;
+            }
+            
+            const progressBar = document.getElementById('progressBar');
+            const progress = document.getElementById('progress');
+            progressBar.classList.remove('hidden');
+            progress.style.width = '20%';
+            
+            const formData = new FormData();
+            formData.append('company_name', document.getElementById('companyName').value);
+            formData.append('customer_col', document.getElementById('colCustomer').value);
+            formData.append('revenue_col', document.getElementById('colRevenue').value);
+            formData.append('date_col', document.getElementById('colDate').value);
+            formData.append('segment_col', document.getElementById('colSegment').value);
+            formData.append('analyses', JSON.stringify(selectedAnalyses));
+            
+            try {
+                progress.style.width = '50%';
+                
+                const res = await fetch(`/api/generate-with-mapping/${currentSessionId}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
                 
-                if (!genRes.ok) throw new Error('Generation failed');
+                progress.style.width = '90%';
                 
-                const data = await genRes.json();
-                progress.style.width = '100%';
-                
-                const downloads = document.getElementById('downloadLinks');
-                downloads.innerHTML = `
-                    <a href="/api/download/${currentSessionId}/${data.outputs.ppt}" 
-                       class="download-btn" 
-                       onclick="downloadFile(event, '${currentSessionId}', '${data.outputs.ppt}')">
-                        <span class="icon">📊</span> Download PowerPoint
-                    </a>
-                    <a href="/api/download/${currentSessionId}/${data.outputs.excel}" 
-                       class="download-btn"
-                       onclick="downloadFile(event, '${currentSessionId}', '${data.outputs.excel}')">
-                        <span class="icon">📗</span> Download Excel
-                    </a>
-                `;
-                document.getElementById('resultsCard').style.display = 'block';
-                showMessage('Data pack generated successfully', 'success');
-                
+                if (res.ok) {
+                    const data = await res.json();
+                    progress.style.width = '100%';
+                    
+                    document.getElementById('downloadLinks').innerHTML = `
+                        <a href="#" class="download-btn" onclick="downloadFile(event, '${data.outputs.ppt}')">
+                            📊 Download PowerPoint
+                        </a>
+                        <a href="#" class="download-btn" onclick="downloadFile(event, '${data.outputs.excel}')">
+                            📗 Download Excel
+                        </a>
+                        <p style="margin-top: 15px; color: var(--so-gray); font-size: 13px;">
+                            Analyses included: ${data.analyses_run.join(', ')}
+                        </p>
+                        ${data.errors && Object.keys(data.errors).length ? 
+                            `<p style="color: #991b1b; font-size: 12px;">Some analyses had errors: ${Object.keys(data.errors).join(', ')}</p>` : ''}
+                    `;
+                    
+                    document.getElementById('mappingCard').classList.add('hidden');
+                    document.getElementById('resultsCard').classList.remove('hidden');
+                    setStep(3);
+                    showMessage('Data pack generated!', 'success');
+                } else {
+                    const err = await res.json();
+                    showMessage(err.detail || 'Generation failed', 'error');
+                }
             } catch (e) {
-                showMessage(e.message, 'error');
+                showMessage('Error generating data pack', 'error');
             } finally {
                 setTimeout(() => progressBar.classList.add('hidden'), 1000);
             }
         }
-
-        async function downloadFile(e, sessionId, filename) {
+        
+        async function downloadFile(e, filename) {
             e.preventDefault();
-            const res = await fetch(`/api/download/${sessionId}/${filename}`, {
+            const res = await fetch(`/api/download/${currentSessionId}/${filename}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -932,441 +761,17 @@
                 a.click();
             }
         }
-
-        async function loadSessions() {
-            try {
-                const res = await fetch('/api/sessions', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    renderSessions(data.sessions);
-                }
-            } catch (e) {}
-        }
-
-        function renderSessions(sessions) {
-            const list = document.getElementById('sessionList');
-            if (!sessions.length) {
-                list.innerHTML = '<p style="color: var(--so-gray); font-style: italic;">No sessions yet</p>';
-                return;
-            }
-            
-            list.innerHTML = sessions.slice(0, 10).map(s => `
-                <div class="session-item">
-                    <div>
-                        <strong>${s.files.join(', ')}</strong>
-                        <small>${new Date(s.timestamp).toLocaleString()}</small>
-                    </div>
-                    <div class="actions">
-                        <button onclick="loadSession('${s.session_id}')">Load</button>
-                        <button class="delete" onclick="deleteSession('${s.session_id}')">Delete</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function loadSession(sessionId) {
-            currentSessionId = sessionId;
-            document.getElementById('processCard').classList.remove('hidden');
-            showMessage('Session loaded', 'success');
-        }
-
-        async function deleteSession(sessionId) {
-            if (!confirm('Delete this session?')) return;
-            
-            await fetch(`/api/sessions/${sessionId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            loadSessions();
-        }
-
-        function showMessage(text, type) {
-            const area = document.getElementById('messageArea');
-            area.innerHTML = `<div class="message ${type}">${text}</div>`;
-            setTimeout(() => area.innerHTML = '', 5000);
-        }
-
-        // Training Library
-        let trainingFiles = [];
         
-        const trainingUploadArea = document.getElementById('trainingUploadArea');
-        const trainingFileInput = document.getElementById('trainingFileInput');
-        
-        if (trainingUploadArea) {
-            trainingUploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                trainingUploadArea.classList.add('dragover');
-            });
-
-            trainingUploadArea.addEventListener('dragleave', () => {
-                trainingUploadArea.classList.remove('dragover');
-            });
-
-            trainingUploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                trainingUploadArea.classList.remove('dragover');
-                handleTrainingFiles(e.dataTransfer.files);
-            });
-
-            trainingFileInput.addEventListener('change', () => {
-                handleTrainingFiles(trainingFileInput.files);
-            });
-        }
-
-        function handleTrainingFiles(files) {
-            trainingFiles = [...trainingFiles, ...Array.from(files)];
-            renderTrainingFileList();
-        }
-
-        function renderTrainingFileList() {
-            const list = document.getElementById('trainingFileList');
-            list.innerHTML = trainingFiles.map((f, i) => `
-                <div class="file-item">
-                    <span>📚 ${f.name}</span>
-                    <span class="remove" onclick="removeTrainingFile(${i})">✕</span>
-                </div>
-            `).join('');
+        function startOver() {
+            currentSessionId = null;
+            columnsData = null;
             
-            document.getElementById('trainingUploadBtn').style.display = trainingFiles.length ? 'inline-block' : 'none';
-        }
-
-        function removeTrainingFile(index) {
-            trainingFiles.splice(index, 1);
-            renderTrainingFileList();
-        }
-
-        async function uploadTrainingFiles() {
-            if (!trainingFiles.length) return;
-            
-            const formData = new FormData();
-            trainingFiles.forEach(f => formData.append('files', f));
-            formData.append('sector', document.getElementById('trainingSector').value);
-            formData.append('description', 'Training data pack example');
-            
-            try {
-                const res = await fetch('/api/training/upload', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    trainingFiles = [];
-                    renderTrainingFileList();
-                    showMessage(`Uploaded ${data.files_uploaded.length} training files to ${data.sector}`, 'success');
-                    loadTrainingLibrary();
-                } else {
-                    const err = await res.json();
-                    showMessage(err.detail || 'Upload failed', 'error');
-                }
-            } catch (e) {
-                showMessage('Connection error', 'error');
-            }
-        }
-
-        async function loadTrainingLibrary() {
-            try {
-                const res = await fetch('/api/training/list', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    renderTrainingLibrary(data);
-                }
-            } catch (e) {}
-        }
-
-        function renderTrainingLibrary(data) {
-            const container = document.getElementById('trainingLibrary');
-            if (!data.total_files) {
-                container.innerHTML = '<p style="color: var(--so-gray); font-style: italic;">No training files yet. Upload example data packs to improve AI quality.</p>';
-                return;
-            }
-            
-            let html = `<div class="training-stats">📚 ${data.total_files} training files loaded</div>`;
-            
-            for (const [sector, info] of Object.entries(data.sectors)) {
-                html += `
-                    <div class="sector-group">
-                        <strong>${sector}</strong> (${info.count} files)
-                        <small>${info.files.slice(0, 3).join(', ')}${info.files.length > 3 ? '...' : ''}</small>
-                    </div>
-                `;
-            }
-            
-            container.innerHTML = html;
-        }
-
-        function showDashboard(user) {
-            document.getElementById('authSection').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            document.getElementById('userInfo').style.display = 'flex';
-            document.getElementById('userName').textContent = user.full_name || user.username;
-            loadSessions();
-            loadTrainingLibrary();
-            loadSectors();
-        }
-        
-        // ============ ITERATIVE ANALYSIS ============
-        
-        let selectedAnalyses = [];
-        let suggestedAnalyses = [];
-        
-        async function loadSuggestions(sessionId) {
-            try {
-                const res = await fetch(`/api/suggest-analyses/${sessionId}`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    suggestedAnalyses = data.suggested || [];
-                    
-                    if (suggestedAnalyses.length > 0) {
-                        displaySuggestions(data);
-                    }
-                }
-            } catch (e) {
-                console.error('Failed to load suggestions:', e);
-            }
-        }
-        
-        function displaySuggestions(data) {
-            const section = document.getElementById('suggestedAnalysesSection');
-            const container = document.getElementById('suggestedChips');
-            
-            if (!data.suggested || data.suggested.length === 0) {
-                section.style.display = 'none';
-                return;
-            }
-            
-            // Build chips for suggestions
-            const analysisLabels = {
-                'top_customers': 'Top Customers',
-                'customer_concentration': 'Customer Concentration',
-                'customer_retention': 'Customer Retention',
-                'revenue_by_segment': 'Revenue by Segment',
-                'monthly_trends': 'Monthly Trends',
-                'yoy_comparison': 'YoY Comparison',
-                'cohort_analysis': 'Cohort Analysis',
-                'gross_margin': 'Gross Margin'
-            };
-            
-            container.innerHTML = data.suggested.map(type => {
-                const label = analysisLabels[type] || type.replace(/_/g, ' ');
-                const reason = data.reasons[type] || '';
-                const conf = data.confidence[type] || 0;
-                const confPct = Math.round(conf * 100);
-                
-                return `
-                    <span class="analysis-chip selected" data-type="${type}" onclick="toggleSuggestedAnalysis(this)" title="${reason}">
-                        ✓ ${label} <small style="opacity: 0.7;">(${confPct}%)</small>
-                    </span>
-                `;
-            }).join('');
-            
-            // Auto-select suggested analyses
-            selectedAnalyses = [...data.suggested];
-            
-            // Hide suggested ones from the additional list
-            document.querySelectorAll('#analysisChips .analysis-chip').forEach(chip => {
-                if (data.suggested.includes(chip.dataset.type)) {
-                    chip.style.display = 'none';
-                } else {
-                    chip.style.display = '';
-                }
-            });
-            
-            section.style.display = 'block';
-        }
-        
-        function toggleSuggestedAnalysis(chip) {
-            const type = chip.dataset.type;
-            if (chip.classList.contains('selected')) {
-                chip.classList.remove('selected');
-                chip.innerHTML = chip.innerHTML.replace('✓ ', '');
-                selectedAnalyses = selectedAnalyses.filter(a => a !== type);
-            } else {
-                chip.classList.add('selected');
-                if (!chip.innerHTML.includes('✓')) {
-                    chip.innerHTML = '✓ ' + chip.innerHTML;
-                }
-                if (!selectedAnalyses.includes(type)) {
-                    selectedAnalyses.push(type);
-                }
-            }
-        }
-        
-        function toggleAnalysis(chip) {
-            const type = chip.dataset.type;
-            if (chip.classList.contains('selected')) {
-                chip.classList.remove('selected');
-                selectedAnalyses = selectedAnalyses.filter(a => a !== type);
-            } else {
-                chip.classList.add('selected');
-                selectedAnalyses.push(type);
-            }
-        }
-        
-        async function processAndGenerateV2() {
-            if (!currentSessionId) return;
-            
-            const progressBar = document.getElementById('progressBar');
-            const progress = document.getElementById('progress');
-            progressBar.classList.remove('hidden');
-            
-            try {
-                progress.style.width = '20%';
-                
-                const companyName = document.getElementById('packName').value;
-                const formData = new FormData();
-                formData.append('company_name', companyName);
-                formData.append('additional_analyses', JSON.stringify(selectedAnalyses));
-                
-                progress.style.width = '50%';
-                
-                const res = await fetch(`/api/generate-smart-v2/${currentSessionId}`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.detail || 'Generation failed');
-                }
-                
-                const data = await res.json();
-                progress.style.width = '100%';
-                
-                // Show quality badge
-                let qualityHtml = '';
-                if (data.quality) {
-                    const score = data.quality.average_score || 0;
-                    let badgeClass = 'good';
-                    let badgeText = 'Quality: Good';
-                    if (score < 60) {
-                        badgeClass = 'poor';
-                        badgeText = 'Quality: Needs Review';
-                    } else if (score < 80) {
-                        badgeClass = 'warning';
-                        badgeText = 'Quality: Fair';
-                    }
-                    qualityHtml = `<span class="quality-badge ${badgeClass}">${badgeText}</span>`;
-                    
-                    // Show issues if any
-                    if (data.quality.issues && data.quality.issues.length > 0) {
-                        qualityHtml += `<p style="color: var(--so-gray); font-size: 12px; margin-top: 10px;">Issues: ${data.quality.issues.slice(0,3).join(', ')}</p>`;
-                    }
-                }
-                
-                const downloads = document.getElementById('downloadLinks');
-                downloads.innerHTML = `
-                    ${qualityHtml}
-                    <div style="margin-top: 15px;">
-                        <a href="/api/download/${currentSessionId}/${data.outputs.ppt}" 
-                           class="download-btn" 
-                           onclick="downloadFile(event, '${currentSessionId}', '${data.outputs.ppt}')">
-                            <span class="icon">📊</span> Download PowerPoint
-                        </a>
-                        <a href="/api/download/${currentSessionId}/${data.outputs.excel}" 
-                           class="download-btn"
-                           onclick="downloadFile(event, '${currentSessionId}', '${data.outputs.excel}')">
-                            <span class="icon">📗</span> Download Excel
-                        </a>
-                    </div>
-                    <p style="color: var(--so-gray); font-size: 12px; margin-top: 15px;">
-                        Included: ${data.analyses_included.join(', ')}
-                    </p>
-                `;
-                document.getElementById('resultsCard').style.display = 'block';
-                document.getElementById('analysisCard').classList.remove('hidden');
-                showMessage('Data pack generated successfully', 'success');
-                
-            } catch (e) {
-                showMessage(e.message, 'error');
-            } finally {
-                setTimeout(() => progressBar.classList.add('hidden'), 1000);
-            }
-        }
-        
-        async function sendAnalysisRequest() {
-            const input = document.getElementById('analysisInput');
-            const request = input.value.trim();
-            if (!request) return;
-            
-            const messages = document.getElementById('analysisMessages');
-            
-            // Add user message
-            messages.innerHTML += `<div class="analysis-message user">${request}</div>`;
-            input.value = '';
-            messages.scrollTop = messages.scrollHeight;
-            
-            try {
-                // Parse request
-                const formData = new FormData();
-                formData.append('request', request);
-                formData.append('session_id', currentSessionId);
-                
-                const res = await fetch('/api/analyze-request', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    
-                    if (data.matched_analyses.length > 0) {
-                        // Generate the analysis
-                        for (const analysisType of data.matched_analyses) {
-                            const genFormData = new FormData();
-                            genFormData.append('analysis_type', analysisType);
-                            
-                            const genRes = await fetch(`/api/generate-analysis/${currentSessionId}`, {
-                                method: 'POST',
-                                headers: { 'Authorization': `Bearer ${token}` },
-                                body: genFormData
-                            });
-                            
-                            if (genRes.ok) {
-                                const result = await genRes.json();
-                                
-                                let responseHtml = `<strong>${result.title}</strong>`;
-                                if (result.subtitle) {
-                                    responseHtml += `<br><em>${result.subtitle}</em>`;
-                                }
-                                if (result.insights) {
-                                    responseHtml += `<br><small>${result.insights}</small>`;
-                                }
-                                if (result.has_data) {
-                                    responseHtml += `<br><span style="color: var(--so-green);">✓ Analysis ready - regenerate data pack to include</span>`;
-                                    
-                                    // Auto-select this analysis
-                                    const chip = document.querySelector(`.analysis-chip[data-type="${analysisType}"]`);
-                                    if (chip && !chip.classList.contains('selected')) {
-                                        toggleAnalysis(chip);
-                                    }
-                                }
-                                
-                                messages.innerHTML += `<div class="analysis-message system">${responseHtml}</div>`;
-                            }
-                        }
-                    } else {
-                        messages.innerHTML += `<div class="analysis-message system">I didn't recognize that analysis type. Try: customer retention, revenue by segment, top customers, monthly trends, YoY comparison, customer concentration, or cohort analysis.</div>`;
-                    }
-                } else {
-                    messages.innerHTML += `<div class="analysis-message system">Sorry, I couldn't process that request.</div>`;
-                }
-            } catch (e) {
-                messages.innerHTML += `<div class="analysis-message system">Error: ${e.message}</div>`;
-            }
-            
-            messages.scrollTop = messages.scrollHeight;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').classList.add('hidden');
+            document.getElementById('uploadCard').classList.remove('hidden');
+            document.getElementById('mappingCard').classList.add('hidden');
+            document.getElementById('resultsCard').classList.add('hidden');
+            setStep(1);
         }
     </script>
 </body>
