@@ -13,13 +13,15 @@ import uuid
 from datetime import datetime
 import json
 
-from .config import UPLOAD_DIR, OUTPUT_DIR, TEMPLATE_DIR, BASE_DIR
+from .config import UPLOAD_DIR, OUTPUT_DIR, TEMPLATE_DIR, BASE_DIR, OPENAI_API_KEY
 from .auth import (
     User, Token, authenticate_user, create_access_token, 
     get_current_user, create_user, get_users_db
 )
 from .processor import DataPackProcessor
 from .generators import PPTGenerator, ExcelGenerator
+from .ai_analyzer import SmartDataTransformer
+from .datapack_generator import generate_datapack
 
 app = FastAPI(
     title="DataPack Platform",
@@ -201,6 +203,74 @@ async def generate_outputs(
             "excel": str(excel_path.name)
         }
     }
+
+
+@app.post("/api/generate-smart/{session_id}")
+async def generate_smart_outputs(
+    session_id: str,
+    company_name: str = Form("Company"),
+    pack_date: str = Form(None),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Smart generation using AI analysis
+    Automatically detects data types and generates appropriate outputs
+    """
+    session_dir = UPLOAD_DIR / session_id
+    output_session_dir = OUTPUT_DIR / session_id
+    output_session_dir.mkdir(parents=True, exist_ok=True)
+    
+    if not session_dir.exists():
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Get uploaded files
+    files = list(session_dir.glob("*.xlsx")) + list(session_dir.glob("*.xls")) + list(session_dir.glob("*.csv"))
+    
+    if not files:
+        raise HTTPException(status_code=400, detail="No data files found")
+    
+    # Use smart transformer
+    transformer = SmartDataTransformer(OPENAI_API_KEY)
+    
+    try:
+        financial_data, customer_data, meta = transformer.process_files(files, company_name)
+        
+        # Use detected company name if not provided
+        if company_name == "Company" and meta.get('company_name'):
+            company_name = meta['company_name']
+            
+        # Generate data pack
+        date_str = pack_date or datetime.now().strftime("%B %Y")
+        
+        outputs = generate_datapack(
+            company_name=company_name,
+            financial_data=financial_data,
+            customer_data=customer_data,
+            output_dir=output_session_dir,
+            date_str=date_str
+        )
+        
+        # Save analysis info
+        with open(session_dir / "smart_analysis.json", 'w') as f:
+            json.dump({
+                'company_name': company_name,
+                'analysis': meta.get('analysis', {}),
+                'generated_at': datetime.now().isoformat()
+            }, f, indent=2, default=str)
+        
+        return {
+            "session_id": session_id,
+            "company_name": company_name,
+            "ai_analyzed": meta.get('analysis', {}).get('_ai_analyzed', False),
+            "outputs": {
+                "ppt": outputs['ppt'].name,
+                "data_backup": outputs['data_backup'].name,
+                "customer_backup": outputs['customer_backup'].name
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
 
 
 @app.get("/api/download/{session_id}/{filename}")
