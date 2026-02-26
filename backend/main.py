@@ -14,6 +14,10 @@ from datetime import datetime
 import json
 
 from .config import UPLOAD_DIR, OUTPUT_DIR, TEMPLATE_DIR, BASE_DIR, OPENAI_API_KEY
+
+# Training library directory
+TRAINING_DIR = BASE_DIR / "training_library"
+TRAINING_DIR.mkdir(parents=True, exist_ok=True)
 from .auth import (
     User, Token, authenticate_user, create_access_token, 
     get_current_user, create_user, get_users_db
@@ -336,6 +340,84 @@ async def root():
     if index_path.exists():
         return HTMLResponse(content=index_path.read_text())
     return HTMLResponse(content="<h1>DataPack Platform</h1><p>Frontend not installed.</p>")
+
+
+# ============ TRAINING LIBRARY ============
+
+@app.post("/api/training/upload")
+async def upload_training_files(
+    files: List[UploadFile] = File(...),
+    sector: str = Form("general"),
+    description: str = Form(""),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload example data packs to train the AI"""
+    sector_dir = TRAINING_DIR / sector.lower().replace(" ", "_")
+    sector_dir.mkdir(parents=True, exist_ok=True)
+    
+    uploaded = []
+    for file in files:
+        if file.filename and file.filename.endswith(('.xlsx', '.xls', '.pptx', '.ppt', '.csv')):
+            file_path = sector_dir / file.filename
+            with open(file_path, 'wb') as f:
+                shutil.copyfileobj(file.file, f)
+            uploaded.append(file.filename)
+    
+    # Save metadata
+    meta_file = sector_dir / "_metadata.json"
+    meta = {}
+    if meta_file.exists():
+        with open(meta_file) as f:
+            meta = json.load(f)
+    
+    meta[datetime.now().isoformat()] = {
+        "files": uploaded,
+        "description": description,
+        "uploaded_by": current_user.username
+    }
+    
+    with open(meta_file, 'w') as f:
+        json.dump(meta, f, indent=2)
+    
+    return {
+        "sector": sector,
+        "files_uploaded": uploaded,
+        "message": f"Uploaded {len(uploaded)} training files"
+    }
+
+
+@app.get("/api/training/list")
+async def list_training_files(current_user: User = Depends(get_current_user)):
+    """List all training files by sector"""
+    result = {}
+    
+    if TRAINING_DIR.exists():
+        for sector_dir in TRAINING_DIR.iterdir():
+            if sector_dir.is_dir():
+                files = [f.name for f in sector_dir.glob("*") if f.is_file() and not f.name.startswith("_")]
+                if files:
+                    result[sector_dir.name] = {
+                        "files": files,
+                        "count": len(files)
+                    }
+    
+    return {"sectors": result, "total_files": sum(s["count"] for s in result.values())}
+
+
+@app.delete("/api/training/{sector}/{filename}")
+async def delete_training_file(
+    sector: str,
+    filename: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a training file"""
+    file_path = TRAINING_DIR / sector / filename
+    
+    if file_path.exists():
+        file_path.unlink()
+        return {"message": f"Deleted {filename}"}
+    
+    raise HTTPException(status_code=404, detail="File not found")
 
 
 # ============ HEALTH CHECK ============

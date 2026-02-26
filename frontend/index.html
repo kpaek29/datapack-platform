@@ -239,6 +239,36 @@
             <h3>📋 Recent Sessions</h3>
             <div class="session-list" id="sessionList"></div>
         </div>
+
+        <!-- Training Library Card -->
+        <div class="card">
+            <h3>🧠 Training Library</h3>
+            <p style="color: #666; margin-bottom: 15px;">Upload example data packs to train the AI. More examples = smarter outputs.</p>
+            
+            <div class="form-group">
+                <label>Sector / Category</label>
+                <select id="trainingSector" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; width: 200px;">
+                    <option value="general">General</option>
+                    <option value="healthcare">Healthcare</option>
+                    <option value="services">Services</option>
+                    <option value="manufacturing">Manufacturing</option>
+                    <option value="technology">Technology</option>
+                    <option value="retail">Retail</option>
+                    <option value="financial_services">Financial Services</option>
+                </select>
+            </div>
+            
+            <div class="upload-area" id="trainingUploadArea" onclick="document.getElementById('trainingFileInput').click()" style="border-color: #3E7733;">
+                <input type="file" id="trainingFileInput" multiple accept=".xlsx,.xls,.pptx,.ppt,.csv">
+                <div style="font-size: 48px;">🎓</div>
+                <p>Upload example PPT and Excel files</p>
+                <p style="font-size: 12px; color: #999;">These teach the AI what good outputs look like</p>
+            </div>
+            <div class="file-list" id="trainingFileList"></div>
+            <button class="btn" id="trainingUploadBtn" onclick="uploadTrainingFiles()" style="display: none; background: #3E7733;">Upload Training Files</button>
+            
+            <div id="trainingLibrary" style="margin-top: 20px;"></div>
+        </div>
     </div>
 
     <script>
@@ -330,14 +360,6 @@
             document.getElementById('authSection').style.display = 'flex';
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('userInfo').style.display = 'none';
-        }
-
-        function showDashboard(user) {
-            document.getElementById('authSection').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            document.getElementById('userInfo').style.display = 'flex';
-            document.getElementById('userName').textContent = user.full_name || user.username;
-            loadSessions();
         }
 
         function showLogin() {
@@ -556,6 +578,128 @@
             const area = document.getElementById('messageArea');
             area.innerHTML = `<div class="message ${type}">${text}</div>`;
             setTimeout(() => area.innerHTML = '', 5000);
+        }
+
+        // ============ TRAINING LIBRARY ============
+        
+        let trainingFiles = [];
+        
+        const trainingUploadArea = document.getElementById('trainingUploadArea');
+        const trainingFileInput = document.getElementById('trainingFileInput');
+        
+        if (trainingUploadArea) {
+            trainingUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                trainingUploadArea.classList.add('dragover');
+            });
+
+            trainingUploadArea.addEventListener('dragleave', () => {
+                trainingUploadArea.classList.remove('dragover');
+            });
+
+            trainingUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                trainingUploadArea.classList.remove('dragover');
+                handleTrainingFiles(e.dataTransfer.files);
+            });
+
+            trainingFileInput.addEventListener('change', () => {
+                handleTrainingFiles(trainingFileInput.files);
+            });
+        }
+
+        function handleTrainingFiles(files) {
+            trainingFiles = [...trainingFiles, ...Array.from(files)];
+            renderTrainingFileList();
+        }
+
+        function renderTrainingFileList() {
+            const list = document.getElementById('trainingFileList');
+            list.innerHTML = trainingFiles.map((f, i) => `
+                <div class="file-item">
+                    <span>🎓 ${f.name}</span>
+                    <span class="remove" onclick="removeTrainingFile(${i})">✕</span>
+                </div>
+            `).join('');
+            
+            document.getElementById('trainingUploadBtn').style.display = trainingFiles.length ? 'block' : 'none';
+        }
+
+        function removeTrainingFile(index) {
+            trainingFiles.splice(index, 1);
+            renderTrainingFileList();
+        }
+
+        async function uploadTrainingFiles() {
+            if (!trainingFiles.length) return;
+            
+            const formData = new FormData();
+            trainingFiles.forEach(f => formData.append('files', f));
+            formData.append('sector', document.getElementById('trainingSector').value);
+            formData.append('description', 'Training data pack example');
+            
+            try {
+                const res = await fetch('/api/training/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    trainingFiles = [];
+                    renderTrainingFileList();
+                    showMessage(`Uploaded ${data.files_uploaded.length} training files to ${data.sector}!`, 'success');
+                    loadTrainingLibrary();
+                } else {
+                    showMessage('Upload failed', 'error');
+                }
+            } catch (e) {
+                showMessage('Connection error', 'error');
+            }
+        }
+
+        async function loadTrainingLibrary() {
+            try {
+                const res = await fetch('/api/training/list', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    renderTrainingLibrary(data);
+                }
+            } catch (e) {}
+        }
+
+        function renderTrainingLibrary(data) {
+            const container = document.getElementById('trainingLibrary');
+            if (!data.total_files) {
+                container.innerHTML = '<p style="color: #666;">No training files yet. Upload example data packs to improve AI quality.</p>';
+                return;
+            }
+            
+            let html = `<p style="color: #3E7733; font-weight: bold;">📚 ${data.total_files} training files loaded</p>`;
+            
+            for (const [sector, info] of Object.entries(data.sectors)) {
+                html += `
+                    <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                        <strong>${sector}</strong> (${info.count} files)<br>
+                        <small style="color: #666;">${info.files.slice(0, 3).join(', ')}${info.files.length > 3 ? '...' : ''}</small>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Load training library on dashboard load
+        function showDashboard(user) {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'flex';
+            document.getElementById('userName').textContent = user.full_name || user.username;
+            loadSessions();
+            loadTrainingLibrary();
         }
     </script>
 </body>
