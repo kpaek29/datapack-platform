@@ -35,6 +35,7 @@ from .datapack_generator import generate_datapack
 from .sectors import SECTORS, SECTOR_CATEGORIES, get_all_sectors, get_sectors_by_category, validate_sector
 from .smart_generator import SmartPPTGenerator, IterativeAnalyzer, QualityValidator, SmartTableFormatter, AnalysisSuggester
 from .calculations import DataPackCalculations, detect_columns
+from .excel_builder import DataPackExcelBuilder
 
 app = FastAPI(
     title="DataPack Platform",
@@ -642,8 +643,10 @@ async def detect_columns_endpoint(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Could not read file: {str(e)}")
     
-    # Detect columns
-    detected = detect_columns(df)
+    # Detect columns with confidence
+    detection_result = detect_columns(df)
+    detected = detection_result['detected']
+    confidence = detection_result['confidence']
     
     # Get all columns with sample data
     columns_info = []
@@ -664,6 +667,7 @@ async def detect_columns_endpoint(
         "rows": len(df),
         "columns": columns_info,
         "detected": detected,
+        "confidence": confidence,
         "available_analyses": [
             {"id": "top_customers", "name": "Top Customers", "requires": ["customer", "revenue"]},
             {"id": "concentration", "name": "Customer Concentration", "requires": ["customer", "revenue"]},
@@ -774,9 +778,6 @@ async def generate_with_mapping(
         except Exception as e:
             results['cohort_error'] = str(e)
     
-    # Also add raw data
-    excel_sheets['Raw Data'] = df
-    
     # Generate PPT
     ppt_path = output_dir / f"{company_name.replace(' ', '_')}_Data_Pack_{timestamp}.pptx"
     ppt = SmartPPTGenerator(ppt_path, company_name, datetime.now().strftime("%B %Y"))
@@ -801,12 +802,55 @@ async def generate_with_mapping(
     
     ppt.save()
     
-    # Generate Excel
+    # Generate Excel with formulas
     excel_path = output_dir / f"{company_name.replace(' ', '_')}_Data_Pack_{timestamp}.xlsx"
-    with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-        for sheet_name, sheet_df in excel_sheets.items():
-            if isinstance(sheet_df, pd.DataFrame) and not sheet_df.empty:
-                sheet_df.to_excel(writer, sheet_name=sheet_name[:31], index=False)
+    excel_builder = DataPackExcelBuilder(excel_path)
+    
+    # Add raw data first (this is the source for formulas)
+    excel_builder.add_raw_data(df, "Raw Data")
+    
+    # Add output tabs with formulas where possible
+    analyses_added = []
+    
+    if 'top_customers' in selected_analyses and customer_col and revenue_col:
+        try:
+            excel_builder.add_top_customers_with_formulas(df, customer_col, revenue_col)
+            analyses_added.append("Top Customers")
+        except:
+            if 'top_customers' in results:
+                excel_builder.add_static_output(results['top_customers'], "Top Customers", "Top Customers")
+                analyses_added.append("Top Customers")
+    
+    if 'concentration' in selected_analyses and customer_col and revenue_col:
+        try:
+            excel_builder.add_concentration_with_formulas(df, customer_col, revenue_col)
+            analyses_added.append("Concentration")
+        except:
+            if 'concentration' in results:
+                excel_builder.add_static_output(results['concentration'], "Concentration", "Customer Concentration")
+                analyses_added.append("Concentration")
+    
+    if 'revenue_by_period' in selected_analyses and date_col and revenue_col:
+        try:
+            excel_builder.add_revenue_by_period_with_formulas(df, date_col, revenue_col)
+            analyses_added.append("Revenue by Period")
+        except:
+            if 'revenue_by_period' in results:
+                excel_builder.add_static_output(results['revenue_by_period'], "Revenue by Period", "Revenue by Period")
+                analyses_added.append("Revenue by Period")
+    
+    # Add remaining analyses as static outputs
+    for analysis_id in ['retention', 'revenue_by_segment', 'yoy_comparison', 'cohort']:
+        if analysis_id in results and isinstance(results[analysis_id], pd.DataFrame):
+            if not results[analysis_id].empty:
+                title = analysis_id.replace('_', ' ').title()
+                excel_builder.add_static_output(results[analysis_id], title, title)
+                analyses_added.append(title)
+    
+    # Add index sheet
+    excel_builder.add_index_sheet(analyses_added)
+    
+    excel_builder.save()
     
     return {
         "session_id": session_id,
@@ -818,6 +862,160 @@ async def generate_with_mapping(
             "excel": excel_path.name
         }
     }
+
+
+@app.post("/api/chat-refine")
+async def chat_refine(
+    message: str = Form(...),
+    session_id: str = Form(...),
+    current_config: str = Form("{}"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Chat-based refinement of data pack
+    Interprets natural language requests and applies changes
+    """
+    try:
+        config = json.loads(current_config)
+    except:
+        config = {}
+    
+    message_lower = message.lower()
+    
+    # Parse the request
+    response = ""
+    action = "none"
+    new_params = {}
+    
+    # Top N changes
+    import re
+    top_n_match = re.search(r'top\s*(\d+)', message_lower)
+    if top_n_match:
+        n = int(top_n_match.group(1))
+        new_params['top_n'] = n
+        response = f"I'll show the top {n} customers instead. Regenerating..."
+        action = "regenerate"
+    
+    # Period changes
+    if 'quarterly' in message_lower:
+        new_params['period'] = 'Q'
+        response = "Switching to quarterly grouping. Regenerating..."
+        action = "regenerate"
+    elif 'monthly' in message_lower:
+        new_params['period'] = 'M'
+        response = "Switching to monthly grouping. Regenerating..."
+        action = "regenerate"
+    elif 'yearly' in message_lower or 'annual' in message_lower:
+        new_params['period'] = 'Y'
+        response = "Switching to yearly grouping. Regenerating..."
+        action = "regenerate"
+    
+    # Add analysis
+    if 'add' in message_lower:
+        if 'retention' in message_lower:
+            new_params['add_analysis'] = 'retention'
+            response = "Adding customer retention analysis. Regenerating..."
+            action = "regenerate"
+        elif 'cohort' in message_lower:
+            new_params['add_analysis'] = 'cohort'
+            response = "Adding cohort analysis. Regenerating..."
+            action = "regenerate"
+        elif 'concentration' in message_lower:
+            new_params['add_analysis'] = 'concentration'
+            response = "Adding concentration analysis. Regenerating..."
+            action = "regenerate"
+    
+    # If no specific action recognized
+    if action == "none":
+        response = "I understood your request but I'm not sure how to apply it yet. Try:\n• 'Show top 30 customers'\n• 'Switch to quarterly'\n• 'Add retention analysis'"
+        return {"response": response, "action": "none"}
+    
+    # Regenerate with new params if action required
+    if action == "regenerate":
+        session_dir = UPLOAD_DIR / session_id
+        output_dir = OUTPUT_DIR / session_id
+        
+        if not session_dir.exists():
+            return {"response": "Session not found. Please upload again.", "action": "error"}
+        
+        # Load data
+        files = list(session_dir.glob("*.xlsx")) + list(session_dir.glob("*.xls")) + list(session_dir.glob("*.csv"))
+        if not files:
+            return {"response": "No data file found.", "action": "error"}
+        
+        filepath = files[0]
+        try:
+            if str(filepath).endswith('.csv'):
+                df = pd.read_csv(filepath)
+            else:
+                xlsx = pd.ExcelFile(filepath)
+                df = pd.read_excel(xlsx, sheet_name=xlsx.sheet_names[0])
+        except:
+            return {"response": "Could not read data file.", "action": "error"}
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        calc = DataPackCalculations()
+        company_name = config.get('company_name', 'Company')
+        
+        # Get column mappings
+        customer_col = config.get('customer_col')
+        revenue_col = config.get('revenue_col')
+        date_col = config.get('date_col')
+        
+        results = {}
+        excel_sheets = {}
+        
+        # Apply top_n if specified
+        top_n = new_params.get('top_n', 20)
+        
+        if customer_col and revenue_col:
+            results['top_customers'] = calc.top_customers(df, customer_col, revenue_col, top_n=top_n)
+            excel_sheets['Top Customers'] = results['top_customers']
+            
+            results['concentration'] = calc.customer_concentration(df, customer_col, revenue_col)
+            excel_sheets['Concentration'] = results['concentration']
+        
+        if customer_col and date_col:
+            period = new_params.get('period', 'M')
+            results['retention'] = calc.customer_retention(df, customer_col, date_col, period=period)
+            excel_sheets['Retention'] = results['retention']
+        
+        if date_col and revenue_col:
+            period = new_params.get('period', 'M')
+            results['revenue_by_period'] = calc.revenue_by_period(df, date_col, revenue_col, period=period)
+            excel_sheets['Revenue by Period'] = results['revenue_by_period']
+        
+        excel_sheets['Raw Data'] = df
+        
+        # Generate PPT
+        ppt_path = output_dir / f"{company_name.replace(' ', '_')}_Data_Pack_{timestamp}.pptx"
+        ppt = SmartPPTGenerator(ppt_path, company_name, datetime.now().strftime("%B %Y"))
+        ppt.add_title_slide()
+        
+        for key, result_df in results.items():
+            if isinstance(result_df, pd.DataFrame) and not result_df.empty:
+                title = key.replace('_', ' ').title() + f" – {company_name}"
+                ppt.add_table_slide(title, result_df)
+        
+        ppt.save()
+        
+        # Generate Excel
+        excel_path = output_dir / f"{company_name.replace(' ', '_')}_Data_Pack_{timestamp}.xlsx"
+        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+            for sheet_name, sheet_df in excel_sheets.items():
+                if isinstance(sheet_df, pd.DataFrame) and not sheet_df.empty:
+                    sheet_df.to_excel(writer, sheet_name=sheet_name[:31], index=False)
+        
+        return {
+            "response": response,
+            "action": "regenerate",
+            "new_outputs": {
+                "ppt": ppt_path.name,
+                "excel": excel_path.name
+            }
+        }
+    
+    return {"response": response, "action": action}
 
 
 # ============ SECTORS ============

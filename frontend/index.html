@@ -430,7 +430,25 @@
             <h3>Your Data Pack</h3>
             <p class="card-subtitle">Download your generated files</p>
             <div id="downloadLinks"></div>
-            <button class="btn" onclick="startOver()" style="margin-top: 20px;">Start New Analysis</button>
+            
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--so-border);">
+                <h4 style="margin-bottom: 15px;">Make Changes</h4>
+                <button class="btn" onclick="goBackToMapping()" style="margin-right: 10px;">← Edit Columns & Analyses</button>
+                <button class="btn" onclick="startOver()">Start New File</button>
+            </div>
+            
+            <!-- Chat for iterations -->
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--so-border);">
+                <h4 style="margin-bottom: 15px;">Refine Your Data Pack</h4>
+                <p style="color: var(--so-gray); font-size: 13px; margin-bottom: 15px;">Ask for changes in plain English</p>
+                <div id="chatMessages" style="background: var(--so-cream); border-radius: 8px; padding: 15px; max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+                    <div style="color: var(--so-gray); font-style: italic;">Try: "Show top 30 customers instead of 20" or "Add YoY growth column"</div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="chatInput" placeholder="What would you like to change?" style="flex: 1; padding: 12px; border: 1px solid var(--so-border); border-radius: 4px; font-family: inherit;" onkeypress="if(event.key==='Enter')sendChat()">
+                    <button class="btn btn-green" onclick="sendChat()">Send</button>
+                </div>
+            </div>
         </div>
         
         <p class="footer-note">Confidential — Do Not Distribute</p>
@@ -589,14 +607,17 @@
         
         function populateColumnDropdowns() {
             const selects = {
-                'colCustomer': columnsData.detected.customer,
-                'colRevenue': columnsData.detected.revenue,
-                'colDate': columnsData.detected.date,
-                'colSegment': columnsData.detected.segment
+                'colCustomer': { detected: columnsData.detected.customer, conf: columnsData.confidence?.customer || 0 },
+                'colRevenue': { detected: columnsData.detected.revenue, conf: columnsData.confidence?.revenue || 0 },
+                'colDate': { detected: columnsData.detected.date, conf: columnsData.confidence?.date || 0 },
+                'colSegment': { detected: columnsData.detected.segment, conf: columnsData.confidence?.segment || 0 }
             };
             
-            for (const [selectId, detectedVal] of Object.entries(selects)) {
+            for (const [selectId, info] of Object.entries(selects)) {
                 const select = document.getElementById(selectId);
+                const detectedVal = info.detected;
+                const confidence = info.conf;
+                
                 select.innerHTML = selectId === 'colSegment' ? '<option value="">-- None --</option>' : '<option value="">-- Select --</option>';
                 
                 for (const col of columnsData.columns) {
@@ -605,6 +626,14 @@
                     opt.textContent = col.name;
                     if (detectedVal === col.name) opt.selected = true;
                     select.appendChild(opt);
+                }
+                
+                // Show confidence indicator
+                const label = select.parentElement.querySelector('label');
+                if (detectedVal && confidence >= 70) {
+                    label.innerHTML = label.textContent + ` <span style="color: var(--so-green); font-size: 10px;">✓ ${confidence}% confident</span>`;
+                } else if (detectedVal && confidence >= 40) {
+                    label.innerHTML = label.textContent + ` <span style="color: #d97706; font-size: 10px;">? ${confidence}% - please verify</span>`;
                 }
                 
                 // Show sample on change
@@ -771,7 +800,78 @@
             document.getElementById('uploadCard').classList.remove('hidden');
             document.getElementById('mappingCard').classList.add('hidden');
             document.getElementById('resultsCard').classList.add('hidden');
+            document.getElementById('chatMessages').innerHTML = '<div style="color: var(--so-gray); font-style: italic;">Try: "Show top 30 customers instead of 20" or "Add YoY growth column"</div>';
             setStep(1);
+        }
+        
+        function goBackToMapping() {
+            document.getElementById('resultsCard').classList.add('hidden');
+            document.getElementById('mappingCard').classList.remove('hidden');
+            setStep(2);
+            showMessage('Make your changes and regenerate', 'info');
+        }
+        
+        // Chat for iterations
+        let chatHistory = [];
+        
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Add user message
+            chatMessages.innerHTML += `<div style="background: var(--so-dark-teal); color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; margin-left: 20%;">${message}</div>`;
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Send to API
+            try {
+                const formData = new FormData();
+                formData.append('message', message);
+                formData.append('session_id', currentSessionId);
+                formData.append('current_config', JSON.stringify({
+                    company_name: document.getElementById('companyName').value,
+                    customer_col: document.getElementById('colCustomer').value,
+                    revenue_col: document.getElementById('colRevenue').value,
+                    date_col: document.getElementById('colDate').value,
+                    segment_col: document.getElementById('colSegment').value
+                }));
+                
+                const res = await fetch('/api/chat-refine', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    chatMessages.innerHTML += `<div style="background: white; border: 1px solid var(--so-border); padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; margin-right: 20%;">${data.response}</div>`;
+                    
+                    if (data.action === 'regenerate' && data.new_outputs) {
+                        // Update download links
+                        document.getElementById('downloadLinks').innerHTML = `
+                            <a href="#" class="download-btn" onclick="downloadFile(event, '${data.new_outputs.ppt}')">
+                                📊 Download PowerPoint
+                            </a>
+                            <a href="#" class="download-btn" onclick="downloadFile(event, '${data.new_outputs.excel}')">
+                                📗 Download Excel
+                            </a>
+                            <p style="margin-top: 15px; color: var(--so-gray); font-size: 13px;">
+                                Updated based on your request
+                            </p>
+                        `;
+                        showMessage('Data pack updated!', 'success');
+                    }
+                } else {
+                    chatMessages.innerHTML += `<div style="background: #fef2f2; border: 1px solid #fecaca; padding: 10px 15px; border-radius: 8px; margin-bottom: 10px;">Sorry, I couldn't process that request. Try being more specific.</div>`;
+                }
+            } catch (e) {
+                chatMessages.innerHTML += `<div style="background: #fef2f2; border: 1px solid #fecaca; padding: 10px 15px; border-radius: 8px; margin-bottom: 10px;">Connection error. Please try again.</div>`;
+            }
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     </script>
 </body>

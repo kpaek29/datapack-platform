@@ -335,9 +335,9 @@ class DataPackCalculations:
         return stats
 
 
-def detect_columns(df: pd.DataFrame) -> Dict[str, Optional[str]]:
+def detect_columns(df: pd.DataFrame) -> Dict[str, Any]:
     """
-    Simple heuristic column detection - no AI
+    Smart column detection with confidence scores
     """
     detected = {
         'customer': None,
@@ -345,48 +345,107 @@ def detect_columns(df: pd.DataFrame) -> Dict[str, Optional[str]]:
         'date': None,
         'segment': None
     }
+    confidence = {
+        'customer': 0,
+        'revenue': 0,
+        'date': 0,
+        'segment': 0
+    }
     
     for col in df.columns:
-        col_lower = str(col).lower()
+        col_lower = str(col).lower().strip()
+        sample_values = df[col].dropna().head(10).tolist()
         
-        # Customer detection
-        if any(kw in col_lower for kw in ['customer', 'client', 'account', 'name', 'company']):
-            if detected['customer'] is None:
-                detected['customer'] = col
+        # ===== CUSTOMER DETECTION =====
+        customer_score = 0
+        # Strong keywords
+        if any(kw in col_lower for kw in ['customer', 'client', 'account name', 'company name']):
+            customer_score = 95
+        # Medium keywords
+        elif any(kw in col_lower for kw in ['name', 'account', 'company', 'vendor', 'buyer']):
+            customer_score = 70
+        # Check if values look like names (strings, varied)
+        elif df[col].dtype == 'object':
+            unique_ratio = df[col].nunique() / len(df) if len(df) > 0 else 0
+            if unique_ratio > 0.1 and unique_ratio < 0.9:  # Not all same, not all unique
+                avg_len = df[col].astype(str).str.len().mean()
+                if avg_len > 3 and avg_len < 50:
+                    customer_score = 40
         
-        # Revenue detection
-        if any(kw in col_lower for kw in ['revenue', 'amount', 'sales', 'total', 'value', 'amt']):
-            if detected['revenue'] is None:
-                detected['revenue'] = col
+        if customer_score > confidence['customer']:
+            detected['customer'] = col
+            confidence['customer'] = customer_score
         
-        # Date detection
-        if any(kw in col_lower for kw in ['date', 'period', 'month', 'time']):
-            if detected['date'] is None:
-                detected['date'] = col
+        # ===== REVENUE DETECTION =====
+        revenue_score = 0
+        # Strong keywords
+        if any(kw in col_lower for kw in ['revenue', 'sales', 'amount', 'total revenue', 'net sales']):
+            revenue_score = 95
+        # Medium keywords  
+        elif any(kw in col_lower for kw in ['total', 'value', 'amt', 'price', 'sum', 'gross']):
+            revenue_score = 70
+        # Check if numeric with currency-like values
+        elif df[col].dtype in ['int64', 'float64']:
+            if df[col].mean() > 100:  # Likely dollar amounts
+                revenue_score = 50
+            if df[col].min() >= 0:  # Non-negative
+                revenue_score += 10
         
-        # Segment detection  
-        if any(kw in col_lower for kw in ['segment', 'category', 'type', 'group', 'region']):
-            if detected['segment'] is None:
-                detected['segment'] = col
+        if revenue_score > confidence['revenue']:
+            detected['revenue'] = col
+            confidence['revenue'] = revenue_score
+        
+        # ===== DATE DETECTION =====
+        date_score = 0
+        # Strong keywords
+        if any(kw in col_lower for kw in ['date', 'transaction date', 'order date', 'invoice date']):
+            date_score = 95
+        # Medium keywords
+        elif any(kw in col_lower for kw in ['period', 'month', 'year', 'time', 'day', 'created', 'timestamp']):
+            date_score = 70
+        
+        # Check actual values
+        if df[col].dtype == 'datetime64[ns]':
+            date_score = max(date_score, 90)
+        elif df[col].dtype == 'object':
+            try:
+                parsed = pd.to_datetime(df[col].head(20), errors='coerce')
+                valid_ratio = parsed.notna().sum() / min(20, len(df))
+                if valid_ratio > 0.7:
+                    date_score = max(date_score, 85)
+            except:
+                pass
+        
+        # Check for year-like values (2020, 2021, etc.)
+        if df[col].dtype in ['int64', 'float64']:
+            sample = df[col].dropna().head(20)
+            if len(sample) > 0:
+                if sample.min() >= 2000 and sample.max() <= 2030:
+                    date_score = max(date_score, 60)
+        
+        if date_score > confidence['date']:
+            detected['date'] = col
+            confidence['date'] = date_score
+        
+        # ===== SEGMENT DETECTION =====
+        segment_score = 0
+        # Strong keywords
+        if any(kw in col_lower for kw in ['segment', 'category', 'product type', 'service type']):
+            segment_score = 95
+        # Medium keywords
+        elif any(kw in col_lower for kw in ['type', 'group', 'region', 'division', 'department', 'class']):
+            segment_score = 70
+        # Check if categorical (few unique values)
+        elif df[col].dtype == 'object':
+            unique_count = df[col].nunique()
+            if 2 <= unique_count <= 20:  # Typical category range
+                segment_score = 50
+        
+        if segment_score > confidence['segment']:
+            detected['segment'] = col
+            confidence['segment'] = segment_score
     
-    # Also check data types
-    for col in df.columns:
-        if detected['date'] is None:
-            if df[col].dtype == 'datetime64[ns]':
-                detected['date'] = col
-            elif df[col].dtype == 'object':
-                # Try parsing as date
-                try:
-                    parsed = pd.to_datetime(df[col].head(10), errors='coerce')
-                    if parsed.notna().sum() >= 5:
-                        detected['date'] = col
-                except:
-                    pass
-        
-        if detected['revenue'] is None:
-            if df[col].dtype in ['int64', 'float64']:
-                # Large numbers likely revenue
-                if df[col].mean() > 100:
-                    detected['revenue'] = col
-    
-    return detected
+    return {
+        'detected': detected,
+        'confidence': confidence
+    }
