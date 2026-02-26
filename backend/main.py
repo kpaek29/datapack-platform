@@ -12,6 +12,7 @@ import shutil
 import uuid
 from datetime import datetime
 import json
+import pandas as pd
 
 from .config import UPLOAD_DIR, OUTPUT_DIR, TEMPLATE_DIR, BASE_DIR, OPENAI_API_KEY, DATA_DIR
 
