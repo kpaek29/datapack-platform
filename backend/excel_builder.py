@@ -19,10 +19,10 @@ class DataPackExcelBuilder:
     - Formulas linking everything together
     """
     
-    # Styles
-    HEADER_FILL = PatternFill(start_color="08468D", end_color="08468D", fill_type="solid")
-    HEADER_FONT = Font(name="Arial", size=9, bold=True, color="FFFFFF")
-    BODY_FONT = Font(name="Arial", size=9)
+    # Styles - GREEN headers, Libre Baskerville font throughout
+    HEADER_FILL = PatternFill(start_color="3E7733", end_color="3E7733", fill_type="solid")  # GREEN
+    HEADER_FONT = Font(name="Libre Baskerville", size=9, bold=True, color="FFFFFF")
+    BODY_FONT = Font(name="Libre Baskerville", size=9)
     TITLE_FONT = Font(name="Libre Baskerville", size=14, bold=True, color="033333")
     BORDER = Border(
         left=Side(style='thin', color='DDDDDD'),

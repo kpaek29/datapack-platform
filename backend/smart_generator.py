@@ -27,16 +27,17 @@ class SilverOakStyle:
     
     # Colors
     DARK_TEAL = RGBColor(0x03, 0x33, 0x33)      # #033333 - primary
-    GREEN = RGBColor(0x3E, 0x77, 0x33)           # #3E7733 - accent
-    NAVY = RGBColor(0x08, 0x46, 0x8D)            # #08468D - headers
+    GREEN = RGBColor(0x3E, 0x77, 0x33)           # #3E7733 - accent/headers
+    NAVY = RGBColor(0x08, 0x46, 0x8D)            # #08468D - secondary
     GRAY = RGBColor(0x6B, 0x6B, 0x6B)            # #6B6B6B - body text
     GRAY_LIGHT = RGBColor(0x85, 0x86, 0x8A)      # #85868A - annotations
     WHITE = RGBColor(0xFF, 0xFF, 0xFF)
     CREAM = RGBColor(0xF9, 0xF8, 0xF6)           # #F9F8F6 - background
     
-    # Fonts
+    # Fonts - ALL Libre Baskerville per Silver Oak brand
     HEADING_FONT = "Libre Baskerville"
-    BODY_FONT = "Arial"
+    BODY_FONT = "Libre Baskerville"
+    TABLE_FONT = "Libre Baskerville"
     
     # Font sizes (in points)
     TITLE_SIZE = 24
@@ -45,8 +46,8 @@ class SilverOakStyle:
     TABLE_BODY_SIZE = 8
     FOOTNOTE_SIZE = 6
     
-    # Table colors
-    TABLE_HEADER_BG = NAVY
+    # Table colors - GREEN headers per Silver Oak brand
+    TABLE_HEADER_BG = GREEN  # Changed from NAVY to GREEN
     TABLE_HEADER_FG = WHITE
     TABLE_ALT_ROW = RGBColor(0xF5, 0xF5, 0xF5)  # Light gray for alternating rows
     TABLE_BORDER = RGBColor(0xDD, 0xDD, 0xDD)
@@ -141,18 +142,18 @@ class SmartTableFormatter:
         for i, w in enumerate(col_widths):
             table.columns[i].width = Inches(w)
         
-        # Style header row
+        # Style header row - GREEN background, Libre Baskerville font
         for j, col in enumerate(df_display.columns):
             cell = table.cell(0, j)
             cell.text = str(col)
             
-            # Fill
+            # Fill - GREEN header
             cell.fill.solid()
-            cell.fill.fore_color.rgb = SilverOakStyle.TABLE_HEADER_BG
+            cell.fill.fore_color.rgb = SilverOakStyle.TABLE_HEADER_BG  # GREEN
             
-            # Text styling
+            # Text styling - Libre Baskerville
             para = cell.text_frame.paragraphs[0]
-            para.font.name = SilverOakStyle.BODY_FONT
+            para.font.name = SilverOakStyle.TABLE_FONT  # Libre Baskerville
             para.font.size = Pt(SilverOakStyle.TABLE_HEADER_SIZE)
             para.font.color.rgb = SilverOakStyle.TABLE_HEADER_FG
             para.font.bold = True
@@ -167,7 +168,7 @@ class SmartTableFormatter:
             cell.margin_top = Inches(0.03)
             cell.margin_bottom = Inches(0.03)
         
-        # Style data rows
+        # Style data rows - Libre Baskerville font
         for i, (idx, row) in enumerate(df_display.iterrows()):
             for j, val in enumerate(row):
                 cell = table.cell(i + 1, j)
@@ -183,9 +184,9 @@ class SmartTableFormatter:
                 else:
                     cell.fill.background()
                 
-                # Text styling
+                # Text styling - Libre Baskerville
                 para = cell.text_frame.paragraphs[0]
-                para.font.name = SilverOakStyle.BODY_FONT
+                para.font.name = SilverOakStyle.TABLE_FONT  # Libre Baskerville
                 para.font.size = Pt(SilverOakStyle.TABLE_BODY_SIZE)
                 para.font.color.rgb = SilverOakStyle.GRAY
                 
