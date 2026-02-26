@@ -1,6 +1,6 @@
 """
 Output Generators Module
-Creates PPT and Excel outputs from processed data
+Creates PPT and Excel outputs from processed data using master template
 """
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -15,96 +15,208 @@ from pathlib import Path
 from typing import Dict, List, Any
 from datetime import datetime
 
+# Path to master slide template
+TEMPLATE_PATH = Path(__file__).parent.parent / "templates" / "master_template.pptx"
+
 class PPTGenerator:
-    """Generate PowerPoint data packs"""
+    """Generate PowerPoint data packs using master template"""
     
-    def __init__(self, output_path: Path):
+    def __init__(self, output_path: Path, template_path: Path = None):
         self.output_path = output_path
-        self.prs = Presentation()
-        self.prs.slide_width = Inches(13.333)  # Widescreen
-        self.prs.slide_height = Inches(7.5)
+        
+        # Load from master template if available
+        template = template_path or TEMPLATE_PATH
+        if template.exists():
+            self.prs = Presentation(str(template))
+            # Remove placeholder slides from template
+            while len(self.prs.slides) > 0:
+                rId = self.prs.slides._sldIdLst[0].rId
+                self.prs.part.drop_rel(rId)
+                del self.prs.slides._sldIdLst[0]
+            self._using_template = True
+        else:
+            self.prs = Presentation()
+            self.prs.slide_width = Inches(13.333)  # Widescreen
+            self.prs.slide_height = Inches(7.5)
+            self._using_template = False
+        
+        self._setup_layouts()
+    
+    def _setup_layouts(self):
+        """Setup slide layout references from template"""
+        layouts = self.prs.slide_layouts
+        
+        # Map layouts by name or index
+        self.layout_title = None
+        self.layout_content = None
+        self.layout_section = None
+        self.layout_two_content = None
+        self.layout_title_only = None
+        self.layout_blank = None
+        
+        for i, layout in enumerate(layouts):
+            name = layout.name.lower()
+            if 'title slide' in name or (i == 0 and 'title' in name):
+                self.layout_title = layout
+            elif 'title and content' in name:
+                self.layout_content = layout
+            elif 'section' in name:
+                self.layout_section = layout
+            elif 'two content' in name:
+                self.layout_two_content = layout
+            elif 'title only' in name:
+                self.layout_title_only = layout
+            elif 'blank' in name:
+                self.layout_blank = layout
+        
+        # Fallback assignments
+        if self._using_template and len(layouts) >= 5:
+            self.layout_title = self.layout_title or layouts[0]
+            self.layout_content = self.layout_content or layouts[1]
+            self.layout_section = self.layout_section or layouts[2]
+            self.layout_two_content = self.layout_two_content or layouts[3]
+            self.layout_title_only = self.layout_title_only or layouts[4]
+        
+        # Ultimate fallback for non-template
+        if len(layouts) >= 7:
+            self.layout_blank = self.layout_blank or layouts[6]
+        elif len(layouts) > 0:
+            self.layout_blank = layouts[0]
+    
+    def _set_placeholder_text(self, slide, ph_type: str, text: str):
+        """Set text in a placeholder by type"""
+        from pptx.enum.shapes import PP_PLACEHOLDER
+        
+        ph_map = {
+            'title': PP_PLACEHOLDER.TITLE,
+            'body': PP_PLACEHOLDER.BODY,
+            'subtitle': PP_PLACEHOLDER.SUBTITLE,
+            'center_title': PP_PLACEHOLDER.CENTER_TITLE,
+        }
+        
+        target_type = ph_map.get(ph_type)
+        
+        for shape in slide.placeholders:
+            if target_type and shape.placeholder_format.type == target_type:
+                shape.text = text
+                return shape
+            elif ph_type == 'title' and 'title' in shape.name.lower():
+                shape.text = text
+                return shape
+            elif ph_type == 'body' and ('content' in shape.name.lower() or 'body' in shape.name.lower()):
+                shape.text = text
+                return shape
+        return None
     
     def add_title_slide(self, title: str, subtitle: str = None):
-        """Add a title slide"""
-        slide_layout = self.prs.slide_layouts[6]  # Blank
-        slide = self.prs.slides.add_slide(slide_layout)
+        """Add a title slide using template layout"""
+        layout = self.layout_title or self.layout_blank or self.prs.slide_layouts[0]
+        slide = self.prs.slides.add_slide(layout)
         
-        # Title
-        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.5), Inches(12.333), Inches(1))
-        title_frame = title_box.text_frame
-        title_para = title_frame.paragraphs[0]
-        title_para.text = title
-        title_para.font.size = Pt(44)
-        title_para.font.bold = True
+        if self._using_template:
+            self._set_placeholder_text(slide, 'title', title)
+            if subtitle:
+                self._set_placeholder_text(slide, 'subtitle', subtitle)
+        else:
+            # Fallback: manual text boxes
+            title_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.5), Inches(12.333), Inches(1))
+            title_frame = title_box.text_frame
+            title_para = title_frame.paragraphs[0]
+            title_para.text = title
+            title_para.font.size = Pt(44)
+            title_para.font.bold = True
+            
+            if subtitle:
+                sub_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(12.333), Inches(0.5))
+                sub_frame = sub_box.text_frame
+                sub_para = sub_frame.paragraphs[0]
+                sub_para.text = subtitle
+                sub_para.font.size = Pt(20)
+                sub_para.font.color.rgb = RGBColor(100, 100, 100)
         
-        # Subtitle
-        if subtitle:
-            sub_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(12.333), Inches(0.5))
-            sub_frame = sub_box.text_frame
-            sub_para = sub_frame.paragraphs[0]
-            sub_para.text = subtitle
-            sub_para.font.size = Pt(20)
-            sub_para.font.color.rgb = RGBColor(100, 100, 100)
+        return slide
     
     def add_section_slide(self, title: str):
-        """Add a section divider slide"""
-        slide_layout = self.prs.slide_layouts[6]
-        slide = self.prs.slides.add_slide(slide_layout)
+        """Add a section divider slide using template layout"""
+        layout = self.layout_section or self.layout_blank or self.prs.slide_layouts[0]
+        slide = self.prs.slides.add_slide(layout)
         
-        # Section title
-        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(3), Inches(12.333), Inches(1))
-        title_frame = title_box.text_frame
-        title_para = title_frame.paragraphs[0]
-        title_para.text = title
-        title_para.font.size = Pt(36)
-        title_para.font.bold = True
+        if self._using_template:
+            self._set_placeholder_text(slide, 'title', title)
+        else:
+            title_box = slide.shapes.add_textbox(Inches(0.5), Inches(3), Inches(12.333), Inches(1))
+            title_frame = title_box.text_frame
+            title_para = title_frame.paragraphs[0]
+            title_para.text = title
+            title_para.font.size = Pt(36)
+            title_para.font.bold = True
+        
+        return slide
     
     def add_table_slide(self, title: str, df: pd.DataFrame, max_rows: int = 15):
-        """Add a slide with a data table"""
-        slide_layout = self.prs.slide_layouts[6]
-        slide = self.prs.slides.add_slide(slide_layout)
+        """Add a slide with a data table using template layout"""
+        layout = self.layout_title_only or self.layout_blank or self.prs.slide_layouts[0]
+        slide = self.prs.slides.add_slide(layout)
         
-        # Title
-        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12.333), Inches(0.6))
-        title_frame = title_box.text_frame
-        title_para = title_frame.paragraphs[0]
-        title_para.text = title
-        title_para.font.size = Pt(24)
-        title_para.font.bold = True
+        # Set title via placeholder or fallback
+        if self._using_template:
+            self._set_placeholder_text(slide, 'title', title)
+        else:
+            title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12.333), Inches(0.6))
+            title_frame = title_box.text_frame
+            title_para = title_frame.paragraphs[0]
+            title_para.text = title
+            title_para.font.size = Pt(24)
+            title_para.font.bold = True
         
-        # Table
+        # Table - position below title
         df_display = df.head(max_rows)
         rows, cols = df_display.shape
         rows += 1  # Header
         
-        table = slide.shapes.add_table(rows, cols, Inches(0.5), Inches(1), Inches(12.333), Inches(5.5)).table
+        # Use template-appropriate positioning
+        table_width = Inches(9.2) if self._using_template else Inches(12.333)
+        table = slide.shapes.add_table(rows, cols, Inches(0.4), Inches(1.2), table_width, Inches(5.5)).table
         
-        # Header
+        # Header with template styling
+        header_color = RGBColor(0x08, 0x46, 0x8D)  # Navy from template
         for j, col in enumerate(df_display.columns):
             cell = table.cell(0, j)
             cell.text = str(col)
-            cell.text_frame.paragraphs[0].font.bold = True
-            cell.text_frame.paragraphs[0].font.size = Pt(10)
+            cell.fill.solid()
+            cell.fill.fore_color.rgb = header_color
+            p = cell.text_frame.paragraphs[0]
+            p.font.bold = True
+            p.font.size = Pt(9)
+            p.font.color.rgb = RGBColor(255, 255, 255)
+            p.font.name = 'Arial'
         
-        # Data
+        # Data rows
         for i, row in df_display.iterrows():
             for j, val in enumerate(row):
                 cell = table.cell(i + 1, j)
                 cell.text = str(val) if pd.notna(val) else ""
-                cell.text_frame.paragraphs[0].font.size = Pt(9)
+                p = cell.text_frame.paragraphs[0]
+                p.font.size = Pt(8)
+                p.font.name = 'Arial'
+        
+        return slide
     
     def add_chart_slide(self, title: str, categories: List[str], series_data: Dict[str, List[float]], chart_type: str = "bar"):
-        """Add a slide with a chart"""
-        slide_layout = self.prs.slide_layouts[6]
-        slide = self.prs.slides.add_slide(slide_layout)
+        """Add a slide with a chart using template layout"""
+        layout = self.layout_title_only or self.layout_blank or self.prs.slide_layouts[0]
+        slide = self.prs.slides.add_slide(layout)
         
-        # Title
-        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12.333), Inches(0.6))
-        title_frame = title_box.text_frame
-        title_para = title_frame.paragraphs[0]
-        title_para.text = title
-        title_para.font.size = Pt(24)
-        title_para.font.bold = True
+        # Set title via placeholder or fallback
+        if self._using_template:
+            self._set_placeholder_text(slide, 'title', title)
+        else:
+            title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12.333), Inches(0.6))
+            title_frame = title_box.text_frame
+            title_para = title_frame.paragraphs[0]
+            title_para.text = title
+            title_para.font.size = Pt(24)
+            title_para.font.bold = True
         
         # Chart data
         chart_data = CategoryChartData()
@@ -119,17 +231,23 @@ class PPTGenerator:
         else:
             ct = XL_CHART_TYPE.COLUMN_CLUSTERED
         
-        # Add chart
-        x, y, cx, cy = Inches(0.5), Inches(1.2), Inches(12.333), Inches(5.8)
+        # Add chart with template-appropriate positioning
+        chart_width = Inches(9.0) if self._using_template else Inches(12.333)
+        x, y, cx, cy = Inches(0.4), Inches(1.2), chart_width, Inches(5.5)
         chart = slide.shapes.add_chart(ct, x, y, cx, cy, chart_data).chart
+        
+        return slide
     
     def add_kpi_slide(self, title: str, kpis: Dict[str, Any]):
-        """Add a slide with KPI boxes"""
-        slide_layout = self.prs.slide_layouts[6]
-        slide = self.prs.slides.add_slide(slide_layout)
+        """Add a slide with KPI boxes using template layout"""
+        layout = self.layout_title_only or self.layout_blank or self.prs.slide_layouts[0]
+        slide = self.prs.slides.add_slide(layout)
         
-        # Title
-        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12.333), Inches(0.6))
+        # Set title via placeholder or fallback
+        if self._using_template:
+            self._set_placeholder_text(slide, 'title', title)
+        else:
+            title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12.333), Inches(0.6))
         title_frame = title_box.text_frame
         title_para = title_frame.paragraphs[0]
         title_para.text = title

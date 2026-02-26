@@ -31,6 +31,7 @@ from .processor import DataPackProcessor
 from .generators import PPTGenerator, ExcelGenerator
 from .ai_analyzer import SmartDataTransformer
 from .datapack_generator import generate_datapack
+from .sectors import SECTORS, SECTOR_CATEGORIES, get_all_sectors, get_sectors_by_category, validate_sector
 
 app = FastAPI(
     title="DataPack Platform",
@@ -347,6 +348,26 @@ async def root():
     return HTMLResponse(content="<h1>DataPack Platform</h1><p>Frontend not installed.</p>")
 
 
+# ============ SECTORS ============
+
+@app.get("/api/sectors")
+async def list_sectors():
+    """Get all available sectors"""
+    return {
+        "sectors": get_all_sectors(),
+        "count": len(SECTORS)
+    }
+
+
+@app.get("/api/sectors/grouped")
+async def list_sectors_grouped():
+    """Get sectors grouped by category"""
+    return {
+        "categories": get_sectors_by_category(),
+        "total": len(SECTORS)
+    }
+
+
 # ============ TRAINING LIBRARY ============
 
 @app.post("/api/training/upload")
@@ -357,7 +378,14 @@ async def upload_training_files(
     current_user: User = Depends(get_current_user)
 ):
     """Upload example data packs to train the AI"""
-    sector_dir = TRAINING_DIR / sector.lower().replace(" ", "_")
+    # Validate sector if not "general"
+    if sector != "general" and not validate_sector(sector):
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid sector. Use /api/sectors to get valid options."
+        )
+    
+    sector_dir = TRAINING_DIR / sector.lower().replace(" ", "_").replace("/", "_").replace("&", "and")
     sector_dir.mkdir(parents=True, exist_ok=True)
     
     uploaded = []
