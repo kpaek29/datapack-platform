@@ -405,6 +405,115 @@
         
         .hidden { display: none !important; }
         
+        /* Analysis Request Interface */
+        .analysis-chat {
+            border: 1px solid var(--so-border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .analysis-messages {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 20px;
+            background: var(--so-cream);
+        }
+        .analysis-message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            max-width: 85%;
+        }
+        .analysis-message.user {
+            background: var(--so-dark-teal);
+            color: var(--so-white);
+            margin-left: auto;
+        }
+        .analysis-message.system {
+            background: var(--so-white);
+            border: 1px solid var(--so-border);
+        }
+        .analysis-input-area {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: var(--so-white);
+            border-top: 1px solid var(--so-border);
+        }
+        .analysis-input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--so-border);
+            border-radius: 4px;
+            font-family: 'Libre Baskerville', serif;
+            font-size: 14px;
+        }
+        .analysis-input-area input:focus {
+            outline: none;
+            border-color: var(--so-green);
+        }
+        .analysis-input-area button {
+            padding: 12px 24px;
+            background: var(--so-green);
+            color: var(--so-white);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Libre Baskerville', serif;
+        }
+        .analysis-input-area button:hover {
+            background: var(--so-green-light);
+        }
+        
+        /* Analysis chips */
+        .analysis-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .analysis-chip {
+            padding: 8px 16px;
+            background: var(--so-white);
+            border: 1px solid var(--so-border);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .analysis-chip:hover {
+            border-color: var(--so-green);
+            color: var(--so-green);
+        }
+        .analysis-chip.selected {
+            background: var(--so-green);
+            color: var(--so-white);
+            border-color: var(--so-green);
+        }
+        
+        /* Quality indicator */
+        .quality-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .quality-badge.good {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .quality-badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .quality-badge.poor {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
         /* Footer text */
         .footer-note {
             text-align: center;
@@ -471,12 +580,45 @@
         <div class="card hidden" id="processCard">
             <h3>Generate Data Pack</h3>
             <div class="form-group">
-                <label>Data Pack Name</label>
-                <input type="text" id="packName" value="Data Pack" style="max-width: 400px;">
+                <label>Company Name</label>
+                <input type="text" id="packName" value="Company" style="max-width: 400px;">
             </div>
-            <button class="btn btn-green" onclick="processAndGenerate()" style="width: auto; padding: 14px 40px;">Generate Data Pack</button>
+            
+            <!-- Analysis Selection -->
+            <div class="form-group" style="margin-top: 20px;">
+                <label>Include Analyses (click to select)</label>
+                <div class="analysis-chips" id="analysisChips">
+                    <span class="analysis-chip" data-type="top_customers" onclick="toggleAnalysis(this)">Top Customers</span>
+                    <span class="analysis-chip" data-type="customer_concentration" onclick="toggleAnalysis(this)">Customer Concentration</span>
+                    <span class="analysis-chip" data-type="customer_retention" onclick="toggleAnalysis(this)">Customer Retention</span>
+                    <span class="analysis-chip" data-type="revenue_by_segment" onclick="toggleAnalysis(this)">Revenue by Segment</span>
+                    <span class="analysis-chip" data-type="monthly_trends" onclick="toggleAnalysis(this)">Monthly Trends</span>
+                    <span class="analysis-chip" data-type="yoy_comparison" onclick="toggleAnalysis(this)">YoY Comparison</span>
+                    <span class="analysis-chip" data-type="cohort_analysis" onclick="toggleAnalysis(this)">Cohort Analysis</span>
+                </div>
+            </div>
+            
+            <button class="btn btn-green" onclick="processAndGenerateV2()" style="width: auto; padding: 14px 40px; margin-top: 20px;">Generate Data Pack</button>
             <div class="progress-bar hidden" id="progressBar">
                 <div class="progress" id="progress" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <!-- Analysis Request Card -->
+        <div class="card hidden" id="analysisCard">
+            <h3>Request Additional Analysis</h3>
+            <p class="card-subtitle">Ask for specific analyses in plain English</p>
+            
+            <div class="analysis-chat">
+                <div class="analysis-messages" id="analysisMessages">
+                    <div class="analysis-message system">
+                        👋 What analysis would you like to add? Try: "Add customer retention analysis" or "Show revenue by segment"
+                    </div>
+                </div>
+                <div class="analysis-input-area">
+                    <input type="text" id="analysisInput" placeholder="e.g., Add customer retention analysis..." onkeypress="if(event.key==='Enter')sendAnalysisRequest()">
+                    <button onclick="sendAnalysisRequest()">Send</button>
+                </div>
             </div>
         </div>
 
@@ -933,6 +1075,178 @@
             loadSessions();
             loadTrainingLibrary();
             loadSectors();
+        }
+        
+        // ============ ITERATIVE ANALYSIS ============
+        
+        let selectedAnalyses = [];
+        
+        function toggleAnalysis(chip) {
+            const type = chip.dataset.type;
+            if (chip.classList.contains('selected')) {
+                chip.classList.remove('selected');
+                selectedAnalyses = selectedAnalyses.filter(a => a !== type);
+            } else {
+                chip.classList.add('selected');
+                selectedAnalyses.push(type);
+            }
+        }
+        
+        async function processAndGenerateV2() {
+            if (!currentSessionId) return;
+            
+            const progressBar = document.getElementById('progressBar');
+            const progress = document.getElementById('progress');
+            progressBar.classList.remove('hidden');
+            
+            try {
+                progress.style.width = '20%';
+                
+                const companyName = document.getElementById('packName').value;
+                const formData = new FormData();
+                formData.append('company_name', companyName);
+                formData.append('additional_analyses', JSON.stringify(selectedAnalyses));
+                
+                progress.style.width = '50%';
+                
+                const res = await fetch(`/api/generate-smart-v2/${currentSessionId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Generation failed');
+                }
+                
+                const data = await res.json();
+                progress.style.width = '100%';
+                
+                // Show quality badge
+                let qualityHtml = '';
+                if (data.quality) {
+                    const score = data.quality.average_score || 0;
+                    let badgeClass = 'good';
+                    let badgeText = 'Quality: Good';
+                    if (score < 60) {
+                        badgeClass = 'poor';
+                        badgeText = 'Quality: Needs Review';
+                    } else if (score < 80) {
+                        badgeClass = 'warning';
+                        badgeText = 'Quality: Fair';
+                    }
+                    qualityHtml = `<span class="quality-badge ${badgeClass}">${badgeText}</span>`;
+                    
+                    // Show issues if any
+                    if (data.quality.issues && data.quality.issues.length > 0) {
+                        qualityHtml += `<p style="color: var(--so-gray); font-size: 12px; margin-top: 10px;">Issues: ${data.quality.issues.slice(0,3).join(', ')}</p>`;
+                    }
+                }
+                
+                const downloads = document.getElementById('downloadLinks');
+                downloads.innerHTML = `
+                    ${qualityHtml}
+                    <div style="margin-top: 15px;">
+                        <a href="/api/download/${currentSessionId}/${data.outputs.ppt}" 
+                           class="download-btn" 
+                           onclick="downloadFile(event, '${currentSessionId}', '${data.outputs.ppt}')">
+                            <span class="icon">📊</span> Download PowerPoint
+                        </a>
+                        <a href="/api/download/${currentSessionId}/${data.outputs.excel}" 
+                           class="download-btn"
+                           onclick="downloadFile(event, '${currentSessionId}', '${data.outputs.excel}')">
+                            <span class="icon">📗</span> Download Excel
+                        </a>
+                    </div>
+                    <p style="color: var(--so-gray); font-size: 12px; margin-top: 15px;">
+                        Included: ${data.analyses_included.join(', ')}
+                    </p>
+                `;
+                document.getElementById('resultsCard').style.display = 'block';
+                document.getElementById('analysisCard').classList.remove('hidden');
+                showMessage('Data pack generated successfully', 'success');
+                
+            } catch (e) {
+                showMessage(e.message, 'error');
+            } finally {
+                setTimeout(() => progressBar.classList.add('hidden'), 1000);
+            }
+        }
+        
+        async function sendAnalysisRequest() {
+            const input = document.getElementById('analysisInput');
+            const request = input.value.trim();
+            if (!request) return;
+            
+            const messages = document.getElementById('analysisMessages');
+            
+            // Add user message
+            messages.innerHTML += `<div class="analysis-message user">${request}</div>`;
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+            
+            try {
+                // Parse request
+                const formData = new FormData();
+                formData.append('request', request);
+                formData.append('session_id', currentSessionId);
+                
+                const res = await fetch('/api/analyze-request', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    if (data.matched_analyses.length > 0) {
+                        // Generate the analysis
+                        for (const analysisType of data.matched_analyses) {
+                            const genFormData = new FormData();
+                            genFormData.append('analysis_type', analysisType);
+                            
+                            const genRes = await fetch(`/api/generate-analysis/${currentSessionId}`, {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${token}` },
+                                body: genFormData
+                            });
+                            
+                            if (genRes.ok) {
+                                const result = await genRes.json();
+                                
+                                let responseHtml = `<strong>${result.title}</strong>`;
+                                if (result.subtitle) {
+                                    responseHtml += `<br><em>${result.subtitle}</em>`;
+                                }
+                                if (result.insights) {
+                                    responseHtml += `<br><small>${result.insights}</small>`;
+                                }
+                                if (result.has_data) {
+                                    responseHtml += `<br><span style="color: var(--so-green);">✓ Analysis ready - regenerate data pack to include</span>`;
+                                    
+                                    // Auto-select this analysis
+                                    const chip = document.querySelector(`.analysis-chip[data-type="${analysisType}"]`);
+                                    if (chip && !chip.classList.contains('selected')) {
+                                        toggleAnalysis(chip);
+                                    }
+                                }
+                                
+                                messages.innerHTML += `<div class="analysis-message system">${responseHtml}</div>`;
+                            }
+                        }
+                    } else {
+                        messages.innerHTML += `<div class="analysis-message system">I didn't recognize that analysis type. Try: customer retention, revenue by segment, top customers, monthly trends, YoY comparison, customer concentration, or cohort analysis.</div>`;
+                    }
+                } else {
+                    messages.innerHTML += `<div class="analysis-message system">Sorry, I couldn't process that request.</div>`;
+                }
+            } catch (e) {
+                messages.innerHTML += `<div class="analysis-message system">Error: ${e.message}</div>`;
+            }
+            
+            messages.scrollTop = messages.scrollHeight;
         }
     </script>
 </body>

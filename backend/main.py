@@ -32,6 +32,7 @@ from .generators import PPTGenerator, ExcelGenerator
 from .ai_analyzer import SmartDataTransformer
 from .datapack_generator import generate_datapack
 from .sectors import SECTORS, SECTOR_CATEGORIES, get_all_sectors, get_sectors_by_category, validate_sector
+from .smart_generator import SmartPPTGenerator, IterativeAnalyzer, QualityValidator, SmartTableFormatter
 
 app = FastAPI(
     title="DataPack Platform",
@@ -346,6 +347,200 @@ async def root():
     if index_path.exists():
         return HTMLResponse(content=index_path.read_text())
     return HTMLResponse(content="<h1>DataPack Platform</h1><p>Frontend not installed.</p>")
+
+
+# ============ ITERATIVE ANALYSIS ============
+
+@app.post("/api/analyze-request")
+async def analyze_request(
+    request: str = Form(...),
+    session_id: str = Form(None),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Parse a natural language analysis request
+    Example: "Add customer retention analysis" or "Show revenue by segment"
+    """
+    analyzer = IterativeAnalyzer()
+    parsed = analyzer.parse_request(request)
+    
+    return {
+        "request": request,
+        "matched_analyses": parsed['matched_analyses'],
+        "available_analyses": list(IterativeAnalyzer.ANALYSIS_TYPES.keys()),
+        "details": parsed['details']
+    }
+
+
+@app.post("/api/generate-analysis/{session_id}")
+async def generate_specific_analysis(
+    session_id: str,
+    analysis_type: str = Form(...),
+    parameters: str = Form("{}"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate a specific analysis and add it to the data pack
+    """
+    session_dir = UPLOAD_DIR / session_id
+    output_session_dir = OUTPUT_DIR / session_id
+    
+    if not session_dir.exists():
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Load data
+    files = list(session_dir.glob("*.xlsx")) + list(session_dir.glob("*.xls")) + list(session_dir.glob("*.csv"))
+    
+    if not files:
+        raise HTTPException(status_code=400, detail="No data files found")
+    
+    # Process files
+    transformer = SmartDataTransformer(OPENAI_API_KEY)
+    financial_data, customer_data, meta = transformer.process_files(files)
+    
+    # Combine data for analysis
+    all_data = {**financial_data, **customer_data}
+    
+    # Parse parameters
+    try:
+        params = json.loads(parameters)
+    except:
+        params = {}
+    
+    # Generate analysis
+    analyzer = IterativeAnalyzer()
+    result = analyzer.generate_analysis(analysis_type, all_data, params)
+    
+    # Validate quality
+    validator = QualityValidator()
+    if isinstance(result.get('data'), pd.DataFrame):
+        quality = validator.validate_dataframe(result['data'], analysis_type)
+        result['quality'] = quality
+    
+    return {
+        "session_id": session_id,
+        "analysis_type": analysis_type,
+        "title": result.get('title'),
+        "subtitle": result.get('subtitle'),
+        "insights": result.get('insights'),
+        "has_data": not result.get('data', pd.DataFrame()).empty,
+        "data_preview": result.get('data', pd.DataFrame()).head(10).to_dict() if isinstance(result.get('data'), pd.DataFrame) else None,
+        "quality": result.get('quality')
+    }
+
+
+@app.post("/api/generate-smart-v2/{session_id}")
+async def generate_smart_outputs_v2(
+    session_id: str,
+    company_name: str = Form("Company"),
+    pack_date: str = Form(None),
+    additional_analyses: str = Form("[]"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Smart generation v2 with improved formatting and optional additional analyses
+    """
+    session_dir = UPLOAD_DIR / session_id
+    output_session_dir = OUTPUT_DIR / session_id
+    output_session_dir.mkdir(parents=True, exist_ok=True)
+    
+    if not session_dir.exists():
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    files = list(session_dir.glob("*.xlsx")) + list(session_dir.glob("*.xls")) + list(session_dir.glob("*.csv"))
+    
+    if not files:
+        raise HTTPException(status_code=400, detail="No data files found")
+    
+    # Parse additional analyses
+    try:
+        extra_analyses = json.loads(additional_analyses)
+    except:
+        extra_analyses = []
+    
+    # Process files
+    transformer = SmartDataTransformer(OPENAI_API_KEY)
+    financial_data, customer_data, meta = transformer.process_files(files, company_name)
+    
+    # Use detected company name
+    if company_name == "Company" and meta.get('company_name'):
+        company_name = meta['company_name']
+    
+    date_str = pack_date or datetime.now().strftime("%B %Y")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Generate PPT with smart generator
+    ppt_path = output_session_dir / f"{company_name.replace(' ', '_')}_Data_Pack_{timestamp}.pptx"
+    
+    ppt = SmartPPTGenerator(ppt_path, company_name, date_str)
+    
+    # Title slide
+    ppt.add_title_slide()
+    
+    # Financial section
+    if financial_data.get('consolidated_pl') is not None and not financial_data['consolidated_pl'].empty:
+        ppt.add_section_slide("Financial Summary")
+        ppt.add_pl_slide(f"P&L Summary – {company_name}", financial_data['consolidated_pl'])
+    
+    # Customer section
+    if customer_data.get('top_customers') is not None and not customer_data['top_customers'].empty:
+        ppt.add_section_slide("Customer Analysis")
+        ppt.add_customer_slide(f"Top Customers – {company_name}", customer_data['top_customers'])
+    
+    # Additional requested analyses
+    if extra_analyses:
+        analyzer = IterativeAnalyzer()
+        all_data = {**financial_data, **customer_data}
+        
+        for analysis_type in extra_analyses:
+            result = analyzer.generate_analysis(analysis_type, all_data)
+            if result.get('data') is not None and not result['data'].empty:
+                ppt.add_table_slide(
+                    result['title'],
+                    result['data'],
+                    subtitle=result.get('subtitle'),
+                    footnote=result.get('insights')
+                )
+    
+    ppt.save()
+    
+    # Generate Excel backup
+    excel_path = output_session_dir / f"{company_name.replace(' ', '_')}_Data_Pack_Backup_{timestamp}.xlsx"
+    
+    with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+        for name, df in financial_data.items():
+            if isinstance(df, pd.DataFrame) and not df.empty:
+                df.to_excel(writer, sheet_name=name[:31], index=False)
+        for name, df in customer_data.items():
+            if isinstance(df, pd.DataFrame) and not df.empty:
+                df.to_excel(writer, sheet_name=name[:31], index=False)
+    
+    # Validate quality
+    validator = QualityValidator()
+    slides_data = [
+        {'title': 'P&L', 'data': financial_data.get('consolidated_pl', pd.DataFrame())},
+        {'title': 'Customers', 'data': customer_data.get('top_customers', pd.DataFrame())}
+    ]
+    quality_report = validator.validate_presentation(slides_data)
+    
+    return {
+        "session_id": session_id,
+        "company_name": company_name,
+        "outputs": {
+            "ppt": ppt_path.name,
+            "excel": excel_path.name
+        },
+        "quality": quality_report,
+        "analyses_included": ['financial_summary', 'customer_analysis'] + extra_analyses
+    }
+
+
+@app.get("/api/available-analyses")
+async def list_available_analyses(current_user: User = Depends(get_current_user)):
+    """List all available analysis types"""
+    return {
+        "analyses": IterativeAnalyzer.ANALYSIS_TYPES
+    }
 
 
 # ============ SECTORS ============
