@@ -491,6 +491,24 @@
             border-color: var(--so-green);
         }
         
+        /* Suggested analyses section */
+        #suggestedAnalysesSection {
+            background: linear-gradient(135deg, rgba(62, 119, 51, 0.08) 0%, rgba(62, 119, 51, 0.03) 100%);
+            border: 1px solid rgba(62, 119, 51, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        #suggestedChips .analysis-chip {
+            background: var(--so-green);
+            color: var(--so-white);
+            border-color: var(--so-green);
+        }
+        #suggestedChips .analysis-chip:not(.selected) {
+            background: var(--so-white);
+            color: var(--so-gray);
+            border-color: var(--so-border);
+        }
+        
         /* Quality indicator */
         .quality-badge {
             display: inline-flex;
@@ -584,9 +602,20 @@
                 <input type="text" id="packName" value="Company" style="max-width: 400px;">
             </div>
             
-            <!-- Analysis Selection -->
+            <!-- AI Suggested Analyses -->
+            <div id="suggestedAnalysesSection" style="margin-top: 20px; display: none;">
+                <label style="display: block; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--so-gray);">
+                    🤖 AI Recommended Analyses
+                </label>
+                <p style="color: var(--so-gray); font-size: 13px; margin-bottom: 12px; font-style: italic;">
+                    Based on your data, we recommend these analyses:
+                </p>
+                <div class="analysis-chips" id="suggestedChips"></div>
+            </div>
+            
+            <!-- Additional Analysis Selection -->
             <div class="form-group" style="margin-top: 20px;">
-                <label>Include Analyses (click to select)</label>
+                <label>Additional Analyses (optional)</label>
                 <div class="analysis-chips" id="analysisChips">
                     <span class="analysis-chip" data-type="top_customers" onclick="toggleAnalysis(this)">Top Customers</span>
                     <span class="analysis-chip" data-type="customer_concentration" onclick="toggleAnalysis(this)">Customer Concentration</span>
@@ -820,8 +849,12 @@
                     selectedFiles = [];
                     renderFileList();
                     document.getElementById('processCard').classList.remove('hidden');
-                    showMessage('Files uploaded successfully', 'success');
+                    showMessage('Files uploaded successfully — analyzing data...', 'success');
                     loadSessions();
+                    
+                    // Load AI suggestions
+                    await loadSuggestions(currentSessionId);
+                    showMessage('Files uploaded. Review suggested analyses below.', 'success');
                 } else {
                     showMessage('Upload failed', 'error');
                 }
@@ -1080,6 +1113,93 @@
         // ============ ITERATIVE ANALYSIS ============
         
         let selectedAnalyses = [];
+        let suggestedAnalyses = [];
+        
+        async function loadSuggestions(sessionId) {
+            try {
+                const res = await fetch(`/api/suggest-analyses/${sessionId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    suggestedAnalyses = data.suggested || [];
+                    
+                    if (suggestedAnalyses.length > 0) {
+                        displaySuggestions(data);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load suggestions:', e);
+            }
+        }
+        
+        function displaySuggestions(data) {
+            const section = document.getElementById('suggestedAnalysesSection');
+            const container = document.getElementById('suggestedChips');
+            
+            if (!data.suggested || data.suggested.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            // Build chips for suggestions
+            const analysisLabels = {
+                'top_customers': 'Top Customers',
+                'customer_concentration': 'Customer Concentration',
+                'customer_retention': 'Customer Retention',
+                'revenue_by_segment': 'Revenue by Segment',
+                'monthly_trends': 'Monthly Trends',
+                'yoy_comparison': 'YoY Comparison',
+                'cohort_analysis': 'Cohort Analysis',
+                'gross_margin': 'Gross Margin'
+            };
+            
+            container.innerHTML = data.suggested.map(type => {
+                const label = analysisLabels[type] || type.replace(/_/g, ' ');
+                const reason = data.reasons[type] || '';
+                const conf = data.confidence[type] || 0;
+                const confPct = Math.round(conf * 100);
+                
+                return `
+                    <span class="analysis-chip selected" data-type="${type}" onclick="toggleSuggestedAnalysis(this)" title="${reason}">
+                        ✓ ${label} <small style="opacity: 0.7;">(${confPct}%)</small>
+                    </span>
+                `;
+            }).join('');
+            
+            // Auto-select suggested analyses
+            selectedAnalyses = [...data.suggested];
+            
+            // Hide suggested ones from the additional list
+            document.querySelectorAll('#analysisChips .analysis-chip').forEach(chip => {
+                if (data.suggested.includes(chip.dataset.type)) {
+                    chip.style.display = 'none';
+                } else {
+                    chip.style.display = '';
+                }
+            });
+            
+            section.style.display = 'block';
+        }
+        
+        function toggleSuggestedAnalysis(chip) {
+            const type = chip.dataset.type;
+            if (chip.classList.contains('selected')) {
+                chip.classList.remove('selected');
+                chip.innerHTML = chip.innerHTML.replace('✓ ', '');
+                selectedAnalyses = selectedAnalyses.filter(a => a !== type);
+            } else {
+                chip.classList.add('selected');
+                if (!chip.innerHTML.includes('✓')) {
+                    chip.innerHTML = '✓ ' + chip.innerHTML;
+                }
+                if (!selectedAnalyses.includes(type)) {
+                    selectedAnalyses.push(type);
+                }
+            }
+        }
         
         function toggleAnalysis(chip) {
             const type = chip.dataset.type;

@@ -33,7 +33,7 @@ from .generators import PPTGenerator, ExcelGenerator
 from .ai_analyzer import SmartDataTransformer
 from .datapack_generator import generate_datapack
 from .sectors import SECTORS, SECTOR_CATEGORIES, get_all_sectors, get_sectors_by_category, validate_sector
-from .smart_generator import SmartPPTGenerator, IterativeAnalyzer, QualityValidator, SmartTableFormatter
+from .smart_generator import SmartPPTGenerator, IterativeAnalyzer, QualityValidator, SmartTableFormatter, AnalysisSuggester
 
 app = FastAPI(
     title="DataPack Platform",
@@ -117,6 +117,72 @@ async def upload_files(
         "session_id": session_id,
         "files_uploaded": uploaded,
         "message": f"Uploaded {len(uploaded)} files"
+    }
+
+
+# ============ ANALYSIS SUGGESTIONS ============
+
+@app.post("/api/suggest-analyses/{session_id}")
+async def suggest_analyses(
+    session_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    AI-powered analysis suggestions based on uploaded data
+    Call after upload to get recommended analyses
+    """
+    session_dir = UPLOAD_DIR / session_id
+    
+    if not session_dir.exists():
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Load uploaded files
+    files = list(session_dir.glob("*.xlsx")) + list(session_dir.glob("*.xls")) + list(session_dir.glob("*.csv"))
+    
+    if not files:
+        raise HTTPException(status_code=400, detail="No data files found")
+    
+    # Load dataframes
+    all_dfs = {}
+    for filepath in files:
+        try:
+            if str(filepath).endswith('.csv'):
+                df = pd.read_csv(filepath, nrows=100)
+                all_dfs[filepath.stem] = df
+            else:
+                xlsx = pd.ExcelFile(filepath)
+                for sheet in xlsx.sheet_names[:10]:
+                    try:
+                        df = pd.read_excel(xlsx, sheet_name=sheet, nrows=100)
+                        all_dfs[f"{filepath.stem}_{sheet}"] = df
+                    except:
+                        pass
+        except Exception as e:
+            continue
+    
+    if not all_dfs:
+        return {
+            "session_id": session_id,
+            "suggested": [],
+            "reasons": {},
+            "additional": list(IterativeAnalyzer.ANALYSIS_TYPES.keys()),
+            "message": "Could not parse uploaded files"
+        }
+    
+    # Get suggestions
+    suggester = AnalysisSuggester()
+    suggestions = suggester.analyze_dataframes(all_dfs)
+    
+    return {
+        "session_id": session_id,
+        "suggested": suggestions['suggested'],
+        "reasons": suggestions['reasons'],
+        "confidence": suggestions['confidence'],
+        "additional": suggestions['additional'],
+        "data_summary": {
+            "files": len(files),
+            "sheets_analyzed": len(all_dfs)
+        }
     }
 
 

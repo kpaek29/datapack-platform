@@ -507,6 +507,131 @@ class SmartPPTGenerator:
         return self.output_path
 
 
+class AnalysisSuggester:
+    """
+    AI-powered analysis suggestion based on data content
+    Scans uploaded data and recommends relevant analyses
+    """
+    
+    def __init__(self, openai_client=None):
+        self.client = openai_client
+    
+    def suggest_analyses(self, data_summary: dict, sheets_info: dict) -> dict:
+        """
+        Suggest analyses based on data content
+        
+        Args:
+            data_summary: Summary of detected data types
+            sheets_info: Info about sheets and columns
+            
+        Returns:
+            {
+                'suggested': ['analysis_type1', 'analysis_type2'],
+                'reasons': {'analysis_type1': 'reason'},
+                'confidence': {'analysis_type1': 0.9},
+                'additional': ['other_available_analyses']
+            }
+        """
+        suggested = []
+        reasons = {}
+        confidence = {}
+        
+        # Check for customer data
+        has_customers = any(
+            'customer' in str(info).lower() or 'client' in str(info).lower()
+            for info in sheets_info.values()
+        )
+        
+        has_revenue = any(
+            'revenue' in str(info).lower() or 'sales' in str(info).lower() or 'amount' in str(info).lower()
+            for info in sheets_info.values()
+        )
+        
+        has_dates = any(
+            'date' in str(info).lower() or '2024' in str(info) or '2025' in str(info) or '2023' in str(info)
+            for info in sheets_info.values()
+        )
+        
+        has_segments = any(
+            'segment' in str(info).lower() or 'category' in str(info).lower() or 'type' in str(info).lower()
+            for info in sheets_info.values()
+        )
+        
+        # Suggest based on data
+        if has_customers and has_revenue:
+            suggested.append('top_customers')
+            reasons['top_customers'] = 'Customer and revenue data detected'
+            confidence['top_customers'] = 0.95
+            
+            suggested.append('customer_concentration')
+            reasons['customer_concentration'] = 'Can analyze revenue concentration across customers'
+            confidence['customer_concentration'] = 0.9
+        
+        if has_customers and has_dates:
+            suggested.append('customer_retention')
+            reasons['customer_retention'] = 'Customer data with dates allows retention analysis'
+            confidence['customer_retention'] = 0.7
+        
+        if has_revenue and has_dates:
+            suggested.append('monthly_trends')
+            reasons['monthly_trends'] = 'Revenue with dates enables trend analysis'
+            confidence['monthly_trends'] = 0.85
+            
+            suggested.append('yoy_comparison')
+            reasons['yoy_comparison'] = 'Multi-period data allows year-over-year comparison'
+            confidence['yoy_comparison'] = 0.75
+        
+        if has_segments and has_revenue:
+            suggested.append('revenue_by_segment')
+            reasons['revenue_by_segment'] = 'Segment and revenue data detected'
+            confidence['revenue_by_segment'] = 0.85
+        
+        if has_customers and has_dates and has_revenue:
+            suggested.append('cohort_analysis')
+            reasons['cohort_analysis'] = 'Full customer transaction data enables cohort analysis'
+            confidence['cohort_analysis'] = 0.6
+        
+        # Sort by confidence
+        suggested.sort(key=lambda x: confidence.get(x, 0), reverse=True)
+        
+        # Additional analyses not suggested
+        all_analyses = list(IterativeAnalyzer.ANALYSIS_TYPES.keys())
+        additional = [a for a in all_analyses if a not in suggested]
+        
+        return {
+            'suggested': suggested[:5],  # Top 5 suggestions
+            'reasons': reasons,
+            'confidence': confidence,
+            'additional': additional
+        }
+    
+    def analyze_dataframes(self, dataframes: dict) -> dict:
+        """
+        Analyze actual dataframes to make suggestions
+        """
+        sheets_info = {}
+        
+        for name, df in dataframes.items():
+            if hasattr(df, 'columns'):
+                sheets_info[name] = {
+                    'columns': list(df.columns),
+                    'rows': len(df),
+                    'sample': df.head(3).to_dict() if len(df) > 0 else {}
+                }
+        
+        # Build summary
+        all_columns = []
+        for info in sheets_info.values():
+            all_columns.extend([str(c).lower() for c in info.get('columns', [])])
+        
+        data_summary = {
+            'total_sheets': len(sheets_info),
+            'all_columns': all_columns
+        }
+        
+        return self.suggest_analyses(data_summary, sheets_info)
+
+
 class IterativeAnalyzer:
     """
     Handles iterative analysis requests
