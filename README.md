@@ -79,3 +79,4 @@ Edit `backend/processor.py` to add new analysis patterns:
 Edit `backend/generators.py` to customize outputs:
 - Modify PPT slide layouts
 - Customize Excel formatting
+# Trigger redeploy Thu Feb 26 05:26:27 UTC 2026
